@@ -2,77 +2,61 @@
 title: Integración por partes (IBP) y herramientas Kira / Fire
 ---
 
-## ¿Qué es la integración por partes?
+## ¿Qué es la integración por partes (IBP) en integrales de Feynman?
 
-La integración por partes (IBP) es una técnica para calcular integrales de la forma $\int u\,dv$, basada en la regla del producto para derivadas. La fórmula es:
+En el contexto de integrales de Feynman, las identidades de integración por partes (IBP) son relaciones obtenidas al considerar integrales de derivadas totales en el espacio de momentos de bucle dentro de la regularización dimensional. Dicha propiedad (ausencia de términos de frontera) genera ecuaciones lineales que relacionan integrales con distintos exponentes de propagadores. Estas ecuaciones permiten reducir cualquier integral de la familia a una combinación lineal de un conjunto finito de integrales maestras (master integrals).
 
-$$
-\int u\,dv = u v - \int v\,du
-$$
+Consecuencia práctica: una vez que se ha reducido la familia de integrales a sus masters, se pueden construir sistemas de ecuaciones diferenciales para esos masters y resolverlos (por ejemplo, transformando el sistema a la llamada forma $\varepsilon$-form), recuperando las soluciones en términos de integrales iteradas.
 
-Se elige $u$ y $dv$ de modo que la integral $\int v\,du$ sea más sencilla.
+Referencia: extracto de `recursos/IBP.pdf` (capítulo sobre iterated integrals, sección 6.1 y ejemplos de reducción).
 
-## Uso de los recursos
+## Resumen de los PDFs usados
 
-En la carpeta `recursos` tienes varios PDFs con ejemplos y documentación. En particular usamos:
+- `recursos/IBP.pdf`: explica la derivación de las identidades IBP, demuestra cómo construir relaciones lineales entre integrales (ej. un caso de una integral de 1-loop con dos propagadores) y discute la reducción a integrales maestras y el papel de las ecuaciones diferenciales.
+- `recursos/Kira2.pdf`, `recursos/Kira3.pdf`: manuales y ejemplos de `kira` (configuración de topologías, definición de integrales y ejecución de trabajos de reducción).
+- `recursos/FIRE5.pdf`, `recursos/FIRE6.pdf`: guía de uso de `FIRE` para generar y resolver las identidades IBP, extracción de integrales maestras y workflows para producir tablas de reducción.
 
-- `recursos/IBP.pdf` — teoría y ejemplos clásicos de IBP.
-- `recursos/Kira2.pdf`, `recursos/Kira3.pdf` — manuales de `kira`.
-- `recursos/FIRE5.pdf`, `recursos/FIRE6.pdf` — manuales de `fire`.
+## Cómo construir un job mínimo para `FIRE` (orientativo)
 
-Incluimos a continuación ejemplos prácticos de cómo usar `kira` y `fire` para automatizar pasos relacionados con IBP (reducción de integrales, manipulación simbólica y simplificación).
-
-## Ejemplo 1 — resolver una integral paso a paso
-
-Queremos calcular $\int x e^{x} \,dx$.
-
-1. Elegimos $u = x$, $dv = e^{x} dx$. Entonces $du = dx$, $v = e^{x}$.
-2. Aplicando la fórmula: $\int x e^{x} dx = x e^{x} - \int e^{x} dx = x e^{x} - e^{x} + C$.
-
-## Ejemplo 2 — usar `kira` para manipular expresiones simbólicas
-
-Supongamos que `kira` es una herramienta de línea de comandos que puede simplificar expresiones y aplicar reglas de integración por partes automatizadas.
-
-Comandos de ejemplo (suponiendo que `kira` acepta entrada en formato LaTeX o expresión simbólica):
+1. Definir la topología y los propagadores en un fichero de entrada (por ejemplo `fire_input.m` si se usa formato Mathematica-like).
+2. Ejecutar la reducción:
 
 ```bash
-# Simplificar y aplicar IBP automáticamente a la expresión
-kira --input "integrate(x*exp(x), x)" --method ibp --output result.txt
-# Mostrar resultado
-cat result.txt
+# sintaxis orientativa; adapte según su instalación de FIRE
+fire --input fire_input.m --reduce --output fire_reduction.tables
 ```
 
-Salida esperada (ejemplo):
+3. Inspeccionar `fire_reduction.tables` para obtener las expresiones de cada integral en términos de master integrals.
 
-```
-x*e^x - e^x + C
-```
+Notas: `FIRE` genera sistemas lineales grandes; suele usarse en combinación con herramientas para seleccionar sectores, paralelizar y guardar tablas intermedias.
 
-Nota: consulta `recursos/Kira2.pdf` y `recursos/Kira3.pdf` para opciones avanzadas de `kira`, flags y formatos de entrada.
+## Cómo preparar un job mínimo para `kira` (orientativo)
 
-## Ejemplo 3 — usar `fire` para reducción de integrales
-
-`fire` es otra herramienta que permite reducir integrales paramétricas o integrar familias de funciones mediante reglas simbólicas y bases de integrales maestras.
-
-Comando de ejemplo:
+1. Crear un fichero con la definición de la topología, las integrales y las reglas (ej. `kira_job.yaml` o formato que requiera la versión instalada).
+2. Ejecutar:
 
 ```bash
-# Reducir una familia de integrales dependientes de un parámetro
-fire --integral "I(a) = integrate(x^a * exp(x), x)" --reduce --param a --output fire_result.txt
-cat fire_result.txt
+kira --job kira_job.yaml --output kira_results.txt
 ```
 
-`fire` puede generar relaciones entre integrales y aplicar transformaciones que facilitan la aplicación de IBP repetida. Consulta `recursos/FIRE5.pdf` y `recursos/FIRE6.pdf` para sintaxis completa y ejemplos avanzados.
+o, en interfaces que aceptan comandos directos:
 
-## Notas sobre reproducibilidad
+```bash
+kira --reduce "I(indices) = definition" --method ibp --out kira_results.txt
+```
 
-- Los PDFs originales utilizados como referencia están en la carpeta `recursos/`. Asegúrate de que quienes lean el libro localmente tengan acceso a esos PDFs (no están versionados por diseño).
-- Si prefieres incluir extractos concretos en el libro, podemos extraer fragmentos y convertirlos a Markdown, respetando licencias.
+Recomendación: consulte `recursos/Kira2.pdf` y `recursos/Kira3.pdf` para parámetros, formatos de topología y opciones de paralelización.
 
-## Enlaces y lectura adicional
+## Pistas prácticas y recomendaciones
 
-- Teoría IBP: `recursos/IBP.pdf`
-- Manuales `kira`: `recursos/Kira2.pdf`, `recursos/Kira3.pdf`
-- Manuales `fire`: `recursos/FIRE5.pdf`, `recursos/FIRE6.pdf`
+- Compruebe siempre las simetrías del grafo para reducir el número de integrales independientes antes de la reducción.
+- Use estrategias de sector decomposition / selección de reducción para limitar el coste computacional.
+- Genere y almacene tablas de reducción intermedias para reusar resultados.
+- Tras obtener los masters, considere usar el método de ecuaciones diferenciales y buscar una transformación al $\varepsilon$-form si fuese posible (ver `recursos/IBP.pdf`).
+
+## Reproducibilidad y licencias
+
+He resumido y reinterpretado el material presente en los PDFs de `recursos/`. Si quieres que incorpore citas textuales o fragmentos largos, indícamelo y los extraigo (añadiendo la referencia BibTeX en `book/_static/references.bib` si procede).
 
 ---
+

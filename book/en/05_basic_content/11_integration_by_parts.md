@@ -1,67 +1,42 @@
 ---
 title: Integration by Parts (IBP) and Kira / Fire tools
 ---
+## What IBP means for Feynman integrals
 
-## What is integration by parts?
+In the context of Feynman integrals, integration-by-parts (IBP) identities are linear relations obtained from integrals of total derivatives in loop-momentum space within dimensional regularization. They relate integrals with different propagator powers and permit reduction of any integral in a family to a finite set of master integrals. Once masters are identified, one typically constructs differential equations for them and solves (often via an $\varepsilon$-form) to obtain analytic results.
 
-Integration by parts (IBP) is a technique to compute integrals of the form $\int u\,dv$, based on the product rule for derivatives. Formula:
+Reference: material summarized from `recursos/IBP.pdf` (chapter on iterated integrals, section 6.1).
 
-$$
-\int u\,dv = u v - \int v\,du
-$$
+## Summary of the resources
 
-Choose $u$ and $dv$ so that $\int v\,du$ is simpler.
+- `recursos/IBP.pdf`: derivation of IBP identities, worked 1-loop example (two-point function), reduction strategy to master integrals and use of differential equations.
+- `recursos/Kira2.pdf`, `recursos/Kira3.pdf`: examples and job formats for `kira` (topology definitions, job files, parallel options).
+- `recursos/FIRE5.pdf`, `recursos/FIRE6.pdf`: workflows for `FIRE`, input formats and table outputs.
 
-## Using the resources
+## Example: minimal `kira` job (orientative)
 
-In the repository `recursos` folder there are several PDFs used as reference:
-
-- `recursos/IBP.pdf` — theory and basic examples.
-- `recursos/Kira2.pdf`, `recursos/Kira3.pdf` — `kira` manuals.
-- `recursos/FIRE5.pdf`, `recursos/FIRE6.pdf` — `fire` manuals.
-
-Below are practical examples showing how to use `kira` and `fire` to assist IBP tasks (integral reduction, symbolic manipulation, simplification).
-
-## Example 1 — a step-by-step integral
-
-Compute $\int x e^{x} \,dx$.
-
-1. Let $u = x$, $dv = e^{x} dx$. Then $du = dx$, $v = e^{x}$.
-2. Apply the formula: $\int x e^{x} dx = x e^{x} - \int e^{x} dx = x e^{x} - e^{x} + C$.
-
-## Example 2 — using `kira` for symbolic manipulation
-
-Assuming `kira` can read simple expressions and apply IBP automatically:
+Create a job file describing topology, integrals and desired reductions (e.g. `kira_job.yaml`) and run:
 
 ```bash
-# Apply IBP automatically and save result
-kira --input "integrate(x*exp(x), x)" --method ibp --output result.txt
-cat result.txt
+kira --job kira_job.yaml --output kira_results.txt
 ```
+## Minimal `fire` workflow (orientative)
 
-Expected output:
-
-```
-x*e^x - e^x + C
-```
-
-Consult `recursos/Kira2.pdf` and `recursos/Kira3.pdf` for detailed options.
-
-## Example 3 — using `fire` to reduce integral families
-
-`fire` can reduce parameter-dependent integrals and find relations between them.
+1. Prepare input describing topology and propagators (e.g. `fire_input.m`).
+2. Run reduction:
 
 ```bash
-# Reduce family I(a) = ∫ x^a e^x dx
-fire --integral "I(a) = integrate(x^a * exp(x), x)" --reduce --param a --output fire_result.txt
-cat fire_result.txt
+fire --input fire_input.m --reduce --output fire_reduction.tables
 ```
 
-See `recursos/FIRE5.pdf` and `recursos/FIRE6.pdf` for full syntax and advanced examples.
+3. Read `fire_reduction.tables` to obtain expressions of integrals in terms of master integrals.
 
-## Reproducibility notes
+`FIRE` builds large linear systems (IBP identities) and resuelve para las reducciones; suele usarse con paralelización y almacenamiento intermedio.
 
-- Reference PDFs are in `recursos/` and are not committed by default. Ensure readers have them locally.
-- If desired, we can extract small licensed excerpts into Markdown with proper attribution.
+## Practical recommendations
+
+- Exploit simmetries and sector selection before la reducción para reducir coste.
+- Archive tablas de reducción para reuso.
+- Tras obtener masters, considere el método de ecuaciones diferenciales y la transformación a $\varepsilon$-form (ver `recursos/IBP.pdf`).
 
 ---
