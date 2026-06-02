@@ -5,7 +5,7 @@ title: Integración por partes (IBP) y herramientas Kira / Fire
 
 En el contexto de las integrales de Feynman, las identidades de integración por partes (IBP) son relaciones lineales obtenidas a partir de integrales de derivadas totales en el espacio de los momentos de bucle, dentro de la regularización dimensional. Relacionan integrales con diferentes potencias de propagadores y permiten reducir cualquier integral de una familia a un conjunto finito de integrales maestras. Una vez identificadas las integrales maestras, normalmente se construyen ecuaciones diferenciales para ellas y se busca transformarlas a la forma en $\varepsilon$ para resolverlas en términos de integrales iteradas.
 
-### Definición — integral de Feynman:
+### Definición - integral de Feynman:
 
 Una integral de Feynman asociada a un grafo $G$ con $l$ bucles y $n$ propagadores se expresa habitualmente como
 
@@ -15,7 +15,7 @@ $$
 
 donde los $D_i$ son los inversos de propagador y los enteros $\nu_i$ sus potencias.
 
-### Definición — IBP (integración por partes) en el contexto de integrales de Feynman:
+### Definición - IBP (integración por partes) en el contexto de integrales de Feynman:
 
 En la regularización dimensional la integral de una derivada total se anula (no hay términos de contorno). Para cualquier momento de bucle $k_i$ y cualquier vector $q$ construido a partir de momentos externos y de bucle:
 
