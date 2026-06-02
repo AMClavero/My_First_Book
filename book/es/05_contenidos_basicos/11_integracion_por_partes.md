@@ -96,7 +96,7 @@ bin/FIRE6 -c examples/doublebox
 
 El fichero `doublebox.tables` contiene las expresiones reducidas (integrales en términos de maestras) que pueden cargarse en Mathematica con `LoadTables`.
 
-Consulta el manual de FIRE6 (`recursos/FIRE6.pdf`) para instalación y opciones avanzadas.
+Consulte Smirnov, A.V. y Chukharev, F.S. (2020). FIRE6: Feynman Integral REduction with modular arithmetic. Computer Physics Communications, 247, 106877. DOI: 10.1016/j.cpc.2019.106877 para detalles sobre instalación y opciones avanzadas.
 
 Cita: Smirnov, A.V. y Chukharev, F.S. (2020). FIRE6: Feynman Integral REduction with modular arithmetic. Computer Physics Communications, 247, 106877. DOI: 10.1016/j.cpc.2019.106877
 
