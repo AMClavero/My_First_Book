@@ -5,7 +5,7 @@ title: Integración por partes (IBP) y herramientas Kira / Fire
 
 En el contexto de las integrales de Feynman, las identidades de integración por partes (IBP) son relaciones lineales obtenidas a partir de integrales de derivadas totales en el espacio de los momentos de bucle, dentro de la regularización dimensional. Relacionan integrales con diferentes potencias de propagadores y permiten reducir cualquier integral de una familia a un conjunto finito de integrales maestras. Una vez identificadas las integrales maestras, normalmente se construyen ecuaciones diferenciales para ellas y se busca transformarlas a la forma en $\varepsilon$ para resolverlas en términos de integrales iteradas.
 
-Definición — integral de Feynman:
+### Definición — integral de Feynman:
 
 Una integral de Feynman asociada a un grafo $G$ con $l$ bucles y $n$ propagadores se expresa habitualmente como
 
@@ -15,7 +15,7 @@ $$
 
 donde los $D_i$ son los inversos de propagador y los enteros $\nu_i$ sus potencias.
 
-Definición — IBP (integración por partes) en el contexto de integrales de Feynman:
+### Definición — IBP (integración por partes) en el contexto de integrales de Feynman:
 
 En la regularización dimensional la integral de una derivada total se anula (no hay términos de contorno). Para cualquier momento de bucle $k_i$ y cualquier vector $q$ construido a partir de momentos externos y de bucle:
 
@@ -25,7 +25,7 @@ $$
 
 Al expandir esta ecuación se obtienen relaciones lineales entre integrales de Feynman con los índices $\nu_j$ desplazados; estas son las identidades IBP. Generando suficientes identidades y aplicando un criterio de ordenación (algoritmo de Laporta) se reduce la familia a una base finita de integrales maestras.
 
-Consecuencias y flujo de trabajo:
+### Consecuencias y flujo de trabajo:
 
 - Reducción: las identidades IBP permiten reducir integrales genéricas a integrales maestras mediante eliminación algebraica.
 - Integrales maestras: sólo es necesario calcular las integrales maestras explícitamente; forman una base que depende del criterio de ordenación elegido.
@@ -33,7 +33,7 @@ Consecuencias y flujo de trabajo:
 
 Ejemplo (bosquejo):
 
-Para la función de dos puntos de un bucle con masas iguales, las identidades IBP permiten reducir integrales con índices $(\nu_1,\nu_2)$ a las maestras $I_{1,1}$ e $I_{1,0}$ (burbuja y tadpole). Consulte la referencia para la derivación completa y diagramas; las topologías burbuja y tadpole se muestran en las Figuras \@ref(fig-burbuja) y \@ref(fig-tadpole).
+Para la función de dos puntos de un bucle con masas iguales, las identidades IBP permiten reducir integrales con índices $(\nu_1,\nu_2)$ a las maestras $I_{1,1}$ e $I_{1,0}$ (burbuja y tadpole). Consulte la referencia para la derivación completa y diagramas; las topologías burbuja y tadpole se muestran en {numref}`fig-burbuja` y {numref}`fig-tadpole`.
 
 ```{figure} _static/images/bubble.png
 :name: fig-burbuja
@@ -51,7 +51,7 @@ Topología burbuja (dos puntos, un bucle).
 Topología tadpole (un punto, un bucle).
 ```
 
-Observaciones:
+### Observaciones:
 
 - Diferentes elecciones de orden (dot-basis, ISP-basis) conducen a conjuntos de maestras distintos en la práctica.
 - La reducción IBP es algebraica sobre funciones racionales en variables cinemáticas y la dimensión $D$; la simplificación de funciones racionales suele ser el cuello de botella en rendimiento.
