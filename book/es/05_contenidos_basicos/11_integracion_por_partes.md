@@ -56,7 +56,7 @@ Topología tadpole (un punto, un bucle).
 - Diferentes elecciones de orden (dot-basis, ISP-basis) conducen a conjuntos de maestras distintos en la práctica.
 - La reducción IBP es algebraica sobre funciones racionales en variables cinemáticas y la dimensión $D$; la simplificación de funciones racionales suele ser el cuello de botella en rendimiento.
 
-Referencia (APA): Weinzierl, S. (2022). Feynman Integrals. arXiv:2201.03593. https://arxiv.org/abs/2201.03593
+Referencia: {cite}`weinzierl2022feynmanintegrals`
 
 ## Uso de FIRE6 para reducción IBP
 
@@ -96,9 +96,7 @@ bin/FIRE6 -c examples/doublebox
 
 El fichero `doublebox.tables` contiene las expresiones reducidas (integrales en términos de maestras) que pueden cargarse en Mathematica con `LoadTables`.
 
-Consulte Smirnov, A.V. y Chukharev, F.S. (2020). FIRE6: Feynman Integral REduction with modular arithmetic. Computer Physics Communications, 247, 106877. DOI: 10.1016/j.cpc.2019.106877 para detalles sobre instalación y opciones avanzadas.
-
-Cita: Smirnov, A.V. y Chukharev, F.S. (2020). FIRE6: Feynman Integral REduction with modular arithmetic. Computer Physics Communications, 247, 106877. DOI: 10.1016/j.cpc.2019.106877
+Consulte {cite}`Smirnov_2020` para detalles sobre instalación y opciones avanzadas.
 
 
 ---
