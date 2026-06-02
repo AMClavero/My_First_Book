@@ -41,5 +41,37 @@ Remarks:
 - IBP reduction is algebraic over rational functions in kinematic variables and the dimension $D$; simplification of rational functions is typically the performance bottleneck.
 
 Reference (APA): Weinzierl, S. (2022). Feynman Integrals. arXiv:2201.03593. https://arxiv.org/abs/2201.03593
+ 
+## Using FIRE6 for IBP reduction
+
+FIRE6 is a program to reduce Feynman integrals to master integrals; it implements modular-arithmetic techniques and a C++ backend for large reductions. Typical workflow: prepare a Mathematica "start" file describing the family (momenta, propagators, replacements), optionally generate LiteRed rules, save the start file and run the C++ FIRE6 reduction with a simple config file.
+
+Minimal example (start file sketch in Mathematica):
+
+Get["FIRE6.m"]; 
+Internal = {k1, k2};
+External = {p1, p2, p3};
+Propagators = {-k1[2], -(k1 + p1 + p2)[2], -k2[2], ...(etc.)};
+Replacements = {p1[2] -> 0, p2[2] -> 0, p1 p2 -> s/2};
+PrepareIBP[]; Prepare[]; SaveStart["doublebox"]; Quit[];
+
+Example C++ config file (`doublebox.conf`):
+
+#variables d, s, t
+#start
+#folder examples/
+#problem 1 doublebox.start
+#integrals doublebox.m
+#output doublebox.tables
+
+Run from the FIRE6 binary:
+
+```bash
+bin/FIRE6 -c examples/doublebox
+```
+
+The result `doublebox.tables` contains the reduced expressions (integrals expressed via masters) which can be loaded back into Mathematica with `LoadTables` or used directly.
+
+See the FIRE6 manual (`recursos/FIRE6.pdf`) for installation and advanced options.
 
 ---

@@ -42,4 +42,37 @@ Observaciones:
 
 Referencia (APA): Weinzierl, S. (2022). Feynman Integrals. arXiv:2201.03593. https://arxiv.org/abs/2201.03593
 
+## Uso de FIRE6 para reducción IBP
+
+FIRE6 es un programa público para reducir integrales de Feynman a integrales maestras; incorpora reducción con aritmética modular y un backend en C++ pensado para problemas grandes. Flujo típico: preparar un "start file" en Mathematica (momentos, propagadores, reemplazos), generar reglas de LiteRed opcionalmente, guardar el start y ejecutar la reducción mediante el binario C++ de FIRE6.
+
+Ejemplo mínimo (start file en Mathematica):
+
+Get["FIRE6.m"];
+Internal = {k1, k2};
+External = {p1, p2, p3};
+Propagators = {-k1[2], -(k1 + p1 + p2)[2], -k2[2], ...(etc.)};
+Replacements = {p1[2] -> 0, p2[2] -> 0, p1 p2 -> s/2};
+PrepareIBP[]; Prepare[]; SaveStart["doublebox"]; Quit[];
+
+Ejemplo de archivo de configuración C++ (`doublebox.conf`):
+
+#variables d, s, t
+#start
+#folder examples/
+#problem 1 doublebox.start
+#integrals doublebox.m
+#output doublebox.tables
+
+Ejecutar con:
+
+```bash
+bin/FIRE6 -c examples/doublebox
+```
+
+El fichero `doublebox.tables` contiene las expresiones reducidas (integrales en términos de maestras) que pueden cargarse en Mathematica con `LoadTables`.
+
+Consulta el manual de FIRE6 (`recursos/FIRE6.pdf`) para instalación, opciones de compilación y modos avanzados (paralelización, MPI, aritmética modular).
+
+
 ---
