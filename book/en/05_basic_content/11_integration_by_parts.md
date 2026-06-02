@@ -1,9 +1,10 @@
+
 ---
 title: Integration by Parts (IBP) and Kira / Fire tools
 ---
 ## What IBP means for Feynman integrals
 
-In the context of Feynman integrals, integration-by-parts (IBP) identities are linear relations obtained from integrals of total derivatives in loop-momentum space within dimensional regularisation. They relate integrals with different propagator powers and permit reduction of any integral in a family to a finite set of master integrals. Once master integrals are identified, one typically constructs differential equations for them and attempts to bring the system into an $\varepsilon$-form to obtain analytic solutions in terms of iterated integrals.
+In the context of Feynman integrals, integration-by-parts (IBP) identities are linear relations obtained from integrals of total derivatives in loop-momentum space within dimensional regularisation. They relate integrals with different propagator powers and allow reduction of any integral in a family to a finite set of master integrals. Once master integrals are identified, one typically constructs differential equations for them and attempts to transform them to an $\varepsilon$-form to solve them in terms of iterated integrals.
 
 ### Definition — Feynman integral:
 
@@ -17,28 +18,26 @@ where the $D_i$ denote inverse propagators and the integers $\nu_i$ their powers
 
 ### Definition — IBP (integration by parts) for Feynman integrals:
 
-Within dimensional regularisation the integral of a total derivative vanishes (no boundary terms). For any loop momentum $k_i$ and any vector $q$ constructed from external and loop momenta,
+Within dimensional regularisation the integral of a total derivative vanishes (no boundary terms). For any loop momentum $k_i$ and any vector $q$ constructed from external and loop momenta:
 
 $$
 0=\int \prod_{j=1}^l d^Dk_j\;\frac{\partial}{\partial k_i^\mu}\Bigl\{q^\mu\;\frac{1}{D_1^{\nu_1}\cdots D_n^{\nu_n}}\Bigr\}\,.
 $$
 
-Expanding this equation yields linear relations among Feynman integrals with shifted indices $\nu_j$; these are the IBP identities. By generating sufficiently many such identities and applying an ordering (Laporta algorithm), one reduces the family to a finite basis of master integrals.
+Expanding this equation yields linear relations among Feynman integrals with shifted indices $\nu_j$; these are the IBP identities. By generating sufficiently many identities and applying an ordering criterion (Laporta algorithm) one reduces the family to a finite basis of master integrals.
 
 ### Key consequences and workflow:
 
-- Reduction: IBP identities reduce generic integrals to master integrals using linear-algebraic elimination.
-- Master integrals: Only master integrals need explicit computation; they form a basis dependent on the chosen ordering.
-- Tools: Public programs such as FIRE, Reduze and Kira perform IBP reductions, often using finite-field and sparse linear algebra techniques for performance.
+- Reduction: IBP identities allow reduction of generic integrals to master integrals by algebraic elimination.
+- Master integrals: only the master integrals need to be computed explicitly; they form a basis that depends on the chosen ordering criterion.
+- Tools: public programs such as FIRE, Reduze and Kira perform IBP reductions, using finite-field methods and sparse linear algebra to improve performance.
 
 Example (sketch):
 
-For the one-loop two-point function with equal masses, IBP relations allow reduction of integrals with indices $(\nu_1,\nu_2)$ to the masters $I_{1,1}$ and $I_{1,0}$ (bubble and tadpole). See the referenced chapter for the full derivation and diagrams; the bubble and tadpole topologies are shown in Figures \@ref(fig-bubble) and \@ref(fig-tadpole).
-For the one-loop two-point function with equal masses, IBP relations allow reduction of integrals with indices $(\nu_1,\nu_2)$ to the masters $I_{1,1}$ and $I_{1,0}$ (bubble and tadpole). 
-See the referenced chapter for the full derivation and diagrams; the bubble and tadpole topologies are shown in {numref}`fig-bubble` and {numref}`fig-tadpole`.
+For the one-loop two-point function with equal masses, IBP relations allow reduction of integrals with indices $(\nu_1,\nu_2)$ to the masters $I_{1,1}$ and $I_{1,0}$ (bubble and tadpole). See the referenced chapter for the full derivation and diagrams; the bubble and tadpole topologies are shown in {numref}`fig-bubble` and {numref}`fig-tadpole`.
 
 ---
-title: Integration by Parts (IBP) and Kira / Fire tools
+# Integration by Parts (IBP) and Kira / Fire tools
 ---
 ## What IBP means for Feynman integrals
 
