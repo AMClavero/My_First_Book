@@ -1,8 +1,8 @@
 title: |
-  Creating Electronic Books
-  with Code and
-  Artificial Intelligence
-  Assistants
+  Exercise for the course on
+  Creating Electronic Books:
+  Multiloop techniques in
+  Particle Physics
 author: Alberto Martín Clavero
 copyright: "2026"
 logo: "_static/logo.png"
@@ -50,12 +50,12 @@ latex_docclass:
 latex:
   latex_engine: xelatex
   options: "english"
-  subtitle: "Course for the Faculties of Sciences and Chemical Sciences"       # Optional
+  subtitle: "Course for the Faculties of Sciences and Chemical Sciences"
   header_title: |
     Creating electronic books
     with code and AI
-  institution: "Universidad de Salamanca"  # Optional
-  edition: "1st Edition"                # Optional
+  institution: "University of Salamanca"
+  edition: "1st Edition"
   cover_logo: "_static/usal_logo.png"  # PDF cover logo; the web logo is configured above in `logo`
   # isbn: "978-84-XXXXX-XX-X"          # Optional
   # doi: "10.XXXX/xxxxx"               # Optional
