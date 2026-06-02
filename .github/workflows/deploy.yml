@@ -53,6 +53,19 @@ jobs:
         run: |
           .venv/bin/python scripts/check_encoding.py
 
+      - name: Fail on NBSP (non-breaking spaces)
+        env:
+          PYTHONUTF8: "1"
+        run: |
+          set -euo pipefail
+          echo "Checking repository for NBSP (U+00A0) characters..."
+          # Search in repo files (text) for NBSP
+          if grep -rI --binary-files=without-match -P "\x{00A0}" .; then
+            echo "ERROR: Found NBSP (U+00A0) in repository files. Please replace with regular spaces." >&2
+            exit 2
+          fi
+          echo "No NBSP found in repository."
+
       - name: Check static assets
         run: |
           .venv/bin/python scripts/optimize_static_assets.py --check
