@@ -64,6 +64,19 @@ Example C++ config file (`doublebox.conf`):
 #integrals doublebox.m
 #output doublebox.tables
 
+Full example (from `recursos/doublebox.config`):
+
+```
+#threads           4
+#fthreads          4
+#variables         d,s,t
+#start
+#folder            examples/
+#problem           1 doublebox.start
+#integrals         doublebox.m
+#output            ../tests/outputs/doublebox.tables
+```
+
 Run from the FIRE6 binary:
 
 ```bash
@@ -73,5 +86,7 @@ bin/FIRE6 -c examples/doublebox
 The result `doublebox.tables` contains the reduced expressions (integrals expressed via masters) which can be loaded back into Mathematica with `LoadTables` or used directly.
 
 See the FIRE6 manual (`recursos/FIRE6.pdf`) for installation and advanced options.
+
+Citation: Smirnov, A.V. & Chukharev, F.S. (2020). FIRE6: Feynman Integral REduction with modular arithmetic. Computer Physics Communications, 247, 106877. DOI: 10.1016/j.cpc.2019.106877
 
 ---
