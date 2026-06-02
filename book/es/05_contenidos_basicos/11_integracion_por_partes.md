@@ -33,7 +33,23 @@ Consecuencias y flujo de trabajo:
 
 Ejemplo (bosquejo):
 
-Para la función de dos puntos de un bucle con masas iguales, las identidades IBP permiten reducir integrales con índices $(\nu_1,\nu_2)$ a las maestras $I_{1,1}$ e $I_{1,0}$ (burbuja y tadpole). Consulte la referencia para la derivación completa y los diagramas.
+Para la función de dos puntos de un bucle con masas iguales, las identidades IBP permiten reducir integrales con índices $(\nu_1,\nu_2)$ a las maestras $I_{1,1}$ e $I_{1,0}$ (burbuja y tadpole). Consulte la referencia para la derivación completa y diagramas; las topologías burbuja y tadpole se muestran en las Figuras \@ref(fig-burbuja) y \@ref(fig-tadpole).
+
+```{figure} _static/images/bubble.png
+:name: fig-burbuja
+:align: center
+:width: 40%
+
+Topología burbuja (dos puntos, un bucle).
+```
+
+```{figure} _static/images/tadpole.png
+:name: fig-tadpole
+:align: center
+:width: 25%
+
+Topología tadpole (un punto, un bucle).
+```
 
 Observaciones:
 

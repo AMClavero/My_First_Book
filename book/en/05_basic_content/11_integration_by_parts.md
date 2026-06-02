@@ -33,7 +33,23 @@ Key consequences and workflow:
 
 Example (sketch):
 
-For the one-loop two-point function with equal masses, IBP relations allow reduction of integrals with indices $(\nu_1,\nu_2)$ to the masters $I_{1,1}$ and $I_{1,0}$ (bubble and tadpole). See the referenced chapter for the full derivation and diagrams.
+For the one-loop two-point function with equal masses, IBP relations allow reduction of integrals with indices $(\nu_1,\nu_2)$ to the masters $I_{1,1}$ and $I_{1,0}$ (bubble and tadpole). See the referenced chapter for the full derivation and diagrams; the bubble and tadpole topologies are shown in Figures \@ref(fig-bubble) and \@ref(fig-tadpole).
+
+```{figure} _static/images/bubble.png
+:name: fig-bubble
+:align: center
+:width: 40%
+
+Bubble (one-loop two-point) topology.
+```
+
+```{figure} _static/images/tadpole.png
+:name: fig-tadpole
+:align: center
+:width: 25%
+
+Tadpole (one-loop one-point) topology.
+```
 
 Remarks:
 
