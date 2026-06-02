@@ -48,23 +48,18 @@ FIRE6 es un programa público para reducir integrales de Feynman a integrales ma
 
 Ejemplo mínimo (start file en Mathematica):
 
-Get["FIRE6.m"];
+```
+Get["FIRE6.m"]; 
 Internal = {k1, k2};
 External = {p1, p2, p3};
 Propagators = {-k1[2], -(k1 + p1 + p2)[2], -k2[2], ...(etc.)};
 Replacements = {p1[2] -> 0, p2[2] -> 0, p1 p2 -> s/2};
-PrepareIBP[]; Prepare[]; SaveStart["doublebox"]; Quit[];
+PrepareIBP[]; 
+Prepare[]; 
+SaveStart["doublebox"]; Quit[];
+```
 
 Ejemplo de archivo de configuración C++ (`doublebox.conf`):
-
-#variables d, s, t
-#start
-#folder examples/
-#problem 1 doublebox.start
-#integrals doublebox.m
-#output doublebox.tables
-
-Ejemplo completo (desde `recursos/doublebox.config`):
 
 ```
 #threads           4
@@ -85,7 +80,7 @@ bin/FIRE6 -c examples/doublebox
 
 El fichero `doublebox.tables` contiene las expresiones reducidas (integrales en términos de maestras) que pueden cargarse en Mathematica con `LoadTables`.
 
-Consulta el manual de FIRE6 (`recursos/FIRE6.pdf`) para instalación, opciones de compilación y modos avanzados (paralelización, MPI, aritmética modular).
+Consulta el manual de FIRE6 (`recursos/FIRE6.pdf`) para instalación y opciones avanzadas.
 
 Cita: Smirnov, A.V. y Chukharev, F.S. (2020). FIRE6: Feynman Integral REduction with modular arithmetic. Computer Physics Communications, 247, 106877. DOI: 10.1016/j.cpc.2019.106877
 
