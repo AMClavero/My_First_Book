@@ -3,6 +3,7 @@ root: en/intro
 parts:
   - caption: Example
     chapters:
+    - file: en/05_basic_content/10_quadratic_equations
     - file: en/05_basic_content/11_integration_by_parts
   - caption: Information
     chapters:
