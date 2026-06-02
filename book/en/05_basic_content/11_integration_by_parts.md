@@ -40,6 +40,6 @@ Remarks:
 - Different ordering choices (dot-basis, ISP-basis) lead to different practical master sets.
 - IBP reduction is algebraic over rational functions in kinematic variables and the dimension $D$; simplification of rational functions is typically the performance bottleneck.
 
-Reference: material summarized and converted from `recursos/IBP.pdf` (chapter on iterated integrals and section 6.1 on IBP).
+Reference (APA): Weinzierl, S. (2022). Feynman Integrals. arXiv:2201.03593. https://arxiv.org/abs/2201.03593
 
 ---

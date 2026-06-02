@@ -40,6 +40,6 @@ Observaciones:
 - Diferentes elecciones de orden (dot-basis, ISP-basis) conducen a conjuntos de maestras distintos en la práctica.
 - La reducción IBP es algebraica sobre funciones racionales en variables cinemáticas y la dimensión $D$; la simplificación de funciones racionales suele ser el cuello de botella en rendimiento.
 
-Referencia: contenido resumido y convertido desde `recursos/IBP.pdf` (capítulo sobre integrales iteradas y sección 6.1 sobre IBP).
+Referencia (APA): Weinzierl, S. (2022). Feynman Integrals. arXiv:2201.03593. https://arxiv.org/abs/2201.03593
 
 ---
