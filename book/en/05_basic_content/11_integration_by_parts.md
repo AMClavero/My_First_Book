@@ -1,5 +1,5 @@
 ---
-title: Integration by parts (IBP) and Kira / Fire tools
+title: Integration by parts (IBP) and Kira / FIRE tools
 ---
 ## What IBP means for Feynman integrals
 
