@@ -1,0 +1,338 @@
+Chapter 6
+Iterated integrals
+In this chapter we introduce modern methods to tackle Feynman integrals. The main tool will
+be the method of differential equations. This builds on integration-by-parts identities and dimen-
+sional shift relations, which we discussﬁrst. If the system of differential equations can be brought
+into a particular simple form (theε-form which is introduced in section 6.3.2), a solution in terms
+of iterated integrals is immediate. The methods of this chapter reduce the problem of comput-
+ing Feynman integrals to the problem ofﬁnding an appropriate transformation for the system
+of differential equations. Algorithms to construct an appropriate transformation are discussed
+in chapter 7. We will see that integration-by-parts identities allow us to express any Feynman
+integral as a linear combination of basis integrals, which we call master integrals. The master
+integrals span a vector space and viewing the Feynman integrals as functions of the kinematic
+variables gives us a vector bundle. We discussﬁbre bundles in section 6.4.
+Sections 6.5 and 6.6 are devoted to cuts of Feynman integrals and singularities of Feynman
+integrals, respectively.
+As we may express any Feynman integral as a linear combination of master integrals, we
+may ask if this vector space is equipped with an inner product. An inner product would allow us
+to compute the coefﬁcient in front of each master integral directly, bypassing the need to solve a
+linear system of integration-by-parts identities. This leads us to twisted cohomology, which we
+introduce in section 6.7.
+6.1 Integration-by-parts
+In this section we study more closely the family of Feynman integrals
+Iν1...νnint(D,x 1,...,x NB) =elεγE
+µ2ν−lD
+2l
+∏
+r=1dDkr
+iπD
+2nint
+∏
+j=11
+−q2
+j+m2
+jνj.(6.1)
+We are in particular interested in relations between members of this family, which differ by the
+values of the indices(ν 1,...,νnint). Integration-by-parts identities provide these relations [110,
+111]. Integration-by-parts identities are based on the fact that within dimensional regularisation
+157
+158 CHAPTER 6. ITERATED INTEGRALS
+the integral of a total derivative vanishes
+dDk
+iπD
+2∂
+∂kµ[qµ·f(k)] =0, (6.2)
+i.e. there are no boundary terms. The vectorqcan be any linear combination of the external
+momenta and the loop momentumk. Eq. (6.2) is derived as follows: Let usﬁrst assume thatq
+is a linear combination of the external momenta. Integrals within dimensional regularisation are
+translation invariant (see eq. (2.75))
+dDk
+iπD
+2f(k) =dDk
+iπD
+2f(k+λq). (6.3)
+The right-hand side has to be independent ofλ. This implies in particular that the O(λ)-term has
+to vanish. From
+d
+dλf(k+λq)
+λ=0=qµ∂
+∂kµf(k) =∂
+∂kµ[qµ·f(k)](6.4)
+eq. (6.2) follows.
+Eq. (6.2) also holds forq=k. This is the task of the next exercise:
+Exercise 41: Show that eq. (6.2) holds for q=k.
+Hint: Consider the scaling relation eq. (2.76).
+Let us formulate the integration-by-parts identities forl-loop integrals:
+Integration-by-parts identities:
+Within dimensional regularisation we have for any loop momentumk i(1≤i≤l) and any
+vectorq IBP∈{p 1,...,p Next,k1,...,k l}
+elεγE
+µ2ν−lD
+2l
+∏
+r=1dDkr
+iπD
+2∂
+∂kµ
+iqµ
+IBPnint
+∏
+j=11
+−q2
+j+m2
+jνj=0.(6.5)
+Working out the derivatives leads to relations among integrals with different sets of indices
+(ν1,...,νnint).
+Let’s see how this works in an example: We consider the one-loop two-point function with
+an equal internal mass:
+Iν1ν2(D,x) =eεγE
+m2ν12−D
+2dDk
+iπD
+21
+−q2
+1+m2ν1
+−q2
+2+m2ν2.(6.6)
+6.1. INTEGRATION-BY-PARTS 159
+withq 1=k−p,q 2=k,ν12=ν1+ν2andx=−p2/m2. We have setµ2=m2. As vectorq IBP
+we may takeq IBP∈{p,k}. Let us start withq IBP=p. We obtain
+0=eεγE
+m2ν12−D
+2pµdDk
+iπD
+2∂
+∂kµ1
+−q2
+1+m2ν1
+−q2
+2+m2ν2
+=eεγE
+m2ν12−D
+2dDk
+iπD
+2"
+ν1
+q2
+2−q2
+1−p2
+
+−q2
+1+m2ν1+1
+−q2
+2+m2ν2
++ν2
+q2
+2−q2
+1+p2
+
+−q2
+1+m2ν1
+−q2
+2+m2ν2+1#
+=ν1
+Iν1ν2−I(ν1+1)(ν2−1)+xI (ν1+1)ν2
++ν2
+I(ν1−1)(ν2+1)−Iν1ν2−xI ν1(ν2+1)
+.(6.7)
+In deriving this result we used
+2p·q 1=q2
+2−q2
+1−p2,
+2p·q 2=q2
+2−q2
+1+p2. (6.8)
+Thus we obtain a relation between integrals with different values of(ν 1,ν2):
+(ν1−ν2)Iν1ν2−ν1I(ν1+1)(ν2−1)+ν2I(ν1−1)(ν2+1)+ν1xI(ν1+1)ν2−ν2xIν1(ν2+1)=0.(6.9)
+Exercise 42: Repeat the derivation with q IBP=k and show
+(D−ν1−2ν2)Iν1ν2−ν1I(ν1+1)(ν2−1)+ν1(2+x)I (ν1+1)ν2+2ν2Iν1(ν2+1) =0.(6.10)
+Instead of eq. (6.9) and eq. (6.10) we may consider two independent linear combinations, where
+either the integralI (ν1+1)ν2or the integralI ν1(ν2+1)is absent:
+ν1x(4+x)I (ν1+1)ν2=
+[2(−ν1+ν2) + (ν1+2ν2−D)x]I ν1ν2+ν1(2+x)I (ν1+1)(ν2−1)−2ν2I(ν1−1)(ν2+1),
+ν2x(4+x)I ν1(ν2+1)=
+[2(ν1−ν2) + (2ν 1+ν2−D)x]I ν1ν2−2ν1I(ν1+1)(ν2−1)+ν2(2+x)I (ν1−1)(ν2+1).(6.11)
+Forν1>0 andν 2>0 we may use either theﬁrst or the second equation to reduce the sum
+ν1+ν2: In both equations, the sum of the indices equalsν 1+ν2+1 on the left-hand side, while
+on the right-hand side the sum of the indices equals for all termsν 1+ν2. If eitherν 1=0 (and
+ν2>0) orν 2=0 (andν 1>0) we have a simpler integral: The integral reduces to a tadpole
+integral. As the two internal masses are equal, we have
+Iν0=I 0ν. (6.12)
+Exercise 43: Derive the integration-by-parts identity for the integral
+I0ν2=eεγE
+m2ν2−D
+2dDk
+iπD
+21
+(−k2+m2)ν2.(6.13)
+160 CHAPTER 6. ITERATED INTEGRALS
+✲✻
+ν1ν2
+Figure 6.1: Integration-by-parts reduction for the one-loop two-point function: For all integrals
+to the right of the vertical dashed line and indicated by a green dot, we may use theﬁrst equation
+of eq. (6.11) to lowerν 12, for all integrals above the horizontal dashed line and indicated by a
+green dot, we may use the second equation of eq. (6.11) to lowerν 12. Integrals represented by a
+blue dot are reduced with eq. (6.14). The integrals with a red dot cannot be reduced to simpler
+integrals.
+Verify the identity with the explicit result from eq. (2.123).
+In the previous exercise you were supposed to derive the identity
+ν2I0(ν2+1) =
+ν2−D
+2
+I0ν2. (6.14)
+This identity can be used to reduce forν 2>0 the integralI 0(ν2+1). The situation is summarised
+inﬁg. 6.1. We may reduce with integration-by-parts identities any integralI ν1ν2withν1≥0,
+ν2≥0 andν 1+ν2>0 to a linear combination ofI 11,I10andI 01. In the equal mass case we have
+the symmetryI 01=I10, and therefore any integralI ν1ν2withν1≥0,ν2≥0 andν 1+ν2>0 can
+be reduced to a linear combination ofI 11andI 10. We callI 11andI 10master integrals.
+Let us now return to the general case. We consider a graphGwhich has a Baikov repre-
+sentation. This ensures that we may express any scalar product involving a loop momentum
+as a linear combination of inverse propagators and loop momentum independent terms. In our
+example above we needed this property in eq. (6.8). We consider integrals
+Iν1...νnint,νj∈Z. (6.15)
+We call integrals, where all indices satisfyν j>0, integrals of thetop topology(or of thetop
+sector). Integrals, where one or more indices satisfyν j<1, belong to a sub-topology (or belong
+to a sub-sector). This is illustrated inﬁg. 6.2.
+6.1. INTEGRATION-BY-PARTS 161
+e1
+e4e2
+e3e5ν5=0=⇒e1
+e4e2
+e3
+Figure 6.2: Integrals, where one or more indices satisfyν j<1, belong to a sub-topology. The
+ﬁgure shows as an example the two-loop two-point integral: The caseν 5=0 corresponds to the
+sub-topology obtained by pinching the edgee 5. Note that also the caseν 5<0 corresponds to
+the sub-topology shown in the right picture, in this case with an irreducible scalar product in the
+numerator.
+For a given set of indices(ν 1,...,νnint)we deﬁne
+Nprop=nint
+∑
+j=1Θ
+νj−1
+2
+,N id=nint
+∑
+j=12j−1Θ
+νj−1
+2
+,
+r=nint
+∑
+j=1νjΘ
+νj−1
+2
+,s=nint
+∑
+j=1νjΘ
+−νj+1
+2
+.(6.16)
+Θ(x)denotes the Heaviside step function. (Adding/subtracting the constant 1/2 avoids ambigu-
+ities in the deﬁnition ofΘ(0).)N propcounts the number of propagators having positive indices.
+Nidassigns a sector identity to the integral (a number between 0 and 2nint−1). The variabler
+counts the sum of the powers of the propagators having positive indices, the variablesdoes the
+same thing for the propagators having negative indices. With the help of these variables we may
+now deﬁne a criteria which allows us to compare two integrals and to decide which integral is
+considered to be simpler. One possibility is the tuple
+
+Nprop,Nid,r,s,...
+, (6.17)
+together with the lexicographical order. Thus integrals with a smaller number of propagators
+Npropare considered simpler. Within the group of integrals with the same number of propagators,
+integrals with a smaller sector identity are considered simpler. Within one sector, oneﬁrst selects
+integrals with a smaller value ofras simpler, and in the case of an equal value ofr, one uses as
+a secondary criteria the variables. The dots stand for further variables, which are used if two
+non-identical integrals agree in theﬁrst four variables.
+A second possibility is the tuple
+
+Nprop,Nid,s,r,...
+, (6.18)
+again with the lexicographical order.
+We may now write down all possible integration-by-parts identities according to eq. (6.5).
+This is a system of linear equations for the Feynman integralsI ν1...νnint. With the help of an
+ordering criteria as in eq. (6.17) or in eq. (6.18) we may eliminate the more complicated integrals
+162 CHAPTER 6. ITERATED INTEGRALS
+in favour of the simpler ones. This procedure is known as theLaporta algorithm[112]. At the
+end of the day we are able to express most of the integrals in terms of a few remaining integrals.
+The remaining integrals are calledmaster integrals. The set of master integrals depends on the
+chosen ordering criteria. It should be noted that for the ordering criteria given in eq. (6.17) and
+eq. (6.18) the set of master integrals will also depend on the way we label the internal edges.
+This dependence enters through the sector identityN id, which depends on the labelling of the
+internal edges. The choice of eq. (6.17) will lead to a basis of master integrals with irreducible
+scalar products (i.e. with some negative indices), avoiding positive indices larger than one. Such
+a basis is called anISP-basis. On the other hand, the choice of eq. (6.18) will avoid irreducible
+scalar products (i.e. negative indices) at the expense of allowing positive indices larger than one.
+Such a basis is called adot-basis.
+As in the example discussed above we may supplement the integration-by-parts identities
+with symmetry relations. (In the example of the one-loop two-point function with equal internal
+masses we had the symmetryI ν0=I0ν.) We denote the number of master integrals obtained by
+taking integration-by-parts identities and symmetries into account byN master . If we are only in-
+terested in the number of unreduced integrals obtained from integration-by-parts identities alone,
+we denote this number byN cohom . In physics we are mainly interested in the master integrals,
+which remain after applying integration-by-parts identities and symmetries. However, in sec-
+tion 6.7 we analyse in more detail the effects of the integration-by-parts identities alone. In this
+context,N cohom is the relevant quantity.
+We denote the indices of the master integrals by
+ννν1= (ν11,...,ν1nint),
+ννν2= (ν21,...,ν2nint),
+...
+νννNmaster = (νNmaster 1,...,νNmaster nint).(6.19)
+We deﬁne aN master -dimensional vector ~Iby
+~I=
+Iννν1,Iννν2,...,I νννNmasterT. (6.20)
+For the speciﬁc example discussed in eq. (6.6) and below we have
+~I=
+I10
+I11
+(6.21)
+Integration-by-parts identities and symmetries allow us to express a generic integralI ν1...νnintas
+a linear combination of the master integrals. Only the latter need to be computed. There are
+public available computer programs, which perform the task of reducing Feynman integrals to
+master integrals. These programs are Fire [113, 114], Reduze [115, 116] and Kira [117, 118].
+The following exercise will help you to get acquainted with these programs:
+Exercise 44: Consider the double-box graph G shown inﬁg. 2.3 and the auxiliary graph ˜G with nine
+propagators shown inﬁg. 2.11. This exercise is about the family of Feynman integrals
+Iν1ν2ν3ν4ν5ν6ν7ν8ν9 (6.22)
+6.2. DIMENSIONAL SHIFT RELATIONS 163
+withν8,ν9≤0. Use the notation of the momenta as inﬁg. 2.11. Assume that all external momenta are
+light-like (p2
+1=p2
+2=p2
+3=p2
+4=0) and that all internal propagators are massless. Use one of the public
+available computer programs Kira,Reduze orFire to reduce the Feynman integral
+I1111111(−1)(−1) (6.23)
+to master integrals. For the choice of master integrals you may use the default ordering criteria of the
+chosen computer program.
+We note that integration-by-parts reduction is based only on linear algebra with rational functions
+in the kinematic variablesxand the dimension of space-timeD. However, the simpliﬁcation of
+the rational functions (i.e. cancelling common factors in the numerator and in the denominator)
+is actually a performance bottle-neck. For this reason, many of the programs mentioned above
+employﬁniteﬁeld methods to improve the performance. Finiteﬁeld methods are reviewed in
+appendix I.
+6.2 Dimensional shift relations
+Given a basis of master integrals ~IinDspace-time dimensions and a basis of master integrals ~I′
+in(D+2)space-time dimensions, we may express any element of the basis ~I(i.e. any component
+of~I) as a linear combination of the elements of ~I′and vice versa. In dimensional regularisation
+we have dim ~I=dim ~I′. The relation between Feynman integrals inDand(D+2)space-time
+dimensions (or(D−2)space-time dimensions) is known as thedimensional shift relations
+[76, 77]. In this section we will derive these relations.
+In section 4.3 we introduced the dimensional-shift operatorsD±, which act on a Feynman
+integral as
+D±Iν1...νnint(D,x) =I ν1...νnint(D±2,x)(6.24)
+and the raising operatorsj+(withj∈{1,...,n int}), which act on a Feynman integral as
+j+Iν1...νj...νnint(D,x) =ν j·Iν1...(νj+1)...νnint(D,x).(6.25)
+We start from the Schwinger parameter representation of the Feynman integral
+Iν1...νnint(D) =elεγE
+nint
+∏
+k=1Γ(νk)
+αk≥0dnintα nint
+∏
+k=1ανk−1
+k!
+1
+UD
+2e−F
+U.(6.26)
+In eq. (4.97) we have already seen that the operatorsD+andj+act on the Schwinger parameter

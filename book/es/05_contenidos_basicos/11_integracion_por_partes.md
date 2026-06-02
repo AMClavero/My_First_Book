@@ -1,62 +1,45 @@
 ---
 title: Integración por partes (IBP) y herramientas Kira / Fire
 ---
+## Qué significa IBP para integrales de Feynman
 
-## ¿Qué es la integración por partes (IBP) en integrales de Feynman?
+En el contexto de las integrales de Feynman, las identidades de integración por partes (IBP) son relaciones lineales obtenidas a partir de integrales de derivadas totales en el espacio de los momentos de bucle, dentro de la regularización dimensional. Relacionan integrales con diferentes potencias de propagadores y permiten reducir cualquier integral de una familia a un conjunto finito de integrales maestras. Una vez identificadas las integrales maestras, normalmente se construyen ecuaciones diferenciales para ellas y se busca transformarlas a la forma en $\varepsilon$ para resolverlas en términos de integrales iteradas.
 
-En el contexto de integrales de Feynman, las identidades de integración por partes (IBP) son relaciones obtenidas al considerar integrales de derivadas totales en el espacio de momentos de bucle dentro de la regularización dimensional. Dicha propiedad (ausencia de términos de frontera) genera ecuaciones lineales que relacionan integrales con distintos exponentes de propagadores. Estas ecuaciones permiten reducir cualquier integral de la familia a una combinación lineal de un conjunto finito de integrales maestras (master integrals).
+Definición — integral de Feynman:
 
-Consecuencia práctica: una vez que se ha reducido la familia de integrales a sus masters, se pueden construir sistemas de ecuaciones diferenciales para esos masters y resolverlos (por ejemplo, transformando el sistema a la llamada forma $\varepsilon$-form), recuperando las soluciones en términos de integrales iteradas.
+Una integral de Feynman asociada a un grafo $G$ con $l$ bucles y $n$ propagadores se expresa habitualmente como
 
-Referencia: extracto de `recursos/IBP.pdf` (capítulo sobre iterated integrals, sección 6.1 y ejemplos de reducción).
+$$
+I(\nu_1,\dots,\nu_n)=\int \prod_{j=1}^l \frac{d^Dk_j}{i\pi^{D/2}}\;\frac{1}{D_1^{\nu_1}\cdots D_n^{\nu_n}}\, ,
+$$
 
-## Resumen de los PDFs usados
+donde los $D_i$ son los inversos de propagador y los enteros $\nu_i$ sus potencias.
 
-- `recursos/IBP.pdf`: explica la derivación de las identidades IBP, demuestra cómo construir relaciones lineales entre integrales (ej. un caso de una integral de 1-loop con dos propagadores) y discute la reducción a integrales maestras y el papel de las ecuaciones diferenciales.
-- `recursos/Kira2.pdf`, `recursos/Kira3.pdf`: manuales y ejemplos de `kira` (configuración de topologías, definición de integrales y ejecución de trabajos de reducción).
-- `recursos/FIRE5.pdf`, `recursos/FIRE6.pdf`: guía de uso de `FIRE` para generar y resolver las identidades IBP, extracción de integrales maestras y workflows para producir tablas de reducción.
+Definición — IBP (integración por partes) en el contexto de integrales de Feynman:
 
-## Cómo construir un job mínimo para `FIRE` (orientativo)
+En la regularización dimensional la integral de una derivada total se anula (no hay términos de contorno). Para cualquier momento de bucle $k_i$ y cualquier vector $q$ construido a partir de momentos externos y de bucle:
 
-1. Definir la topología y los propagadores en un fichero de entrada (por ejemplo `fire_input.m` si se usa formato Mathematica-like).
-2. Ejecutar la reducción:
+$$
+0=\int \prod_{j=1}^l d^Dk_j\;\frac{\partial}{\partial k_i^\mu}\Bigl\{q^\mu\;\frac{1}{D_1^{\nu_1}\cdots D_n^{\nu_n}}\Bigr\}\,.
+$$
 
-```bash
-# sintaxis orientativa; adapte según su instalación de FIRE
-fire --input fire_input.m --reduce --output fire_reduction.tables
-```
+Al expandir esta ecuación se obtienen relaciones lineales entre integrales de Feynman con los índices $\nu_j$ desplazados; estas son las identidades IBP. Generando suficientes identidades y aplicando un criterio de ordenación (algoritmo de Laporta) se reduce la familia a una base finita de integrales maestras.
 
-3. Inspeccionar `fire_reduction.tables` para obtener las expresiones de cada integral en términos de master integrals.
+Consecuencias y flujo de trabajo:
 
-Notas: `FIRE` genera sistemas lineales grandes; suele usarse en combinación con herramientas para seleccionar sectores, paralelizar y guardar tablas intermedias.
+- Reducción: las identidades IBP permiten reducir integrales genéricas a integrales maestras mediante eliminación algebraica.
+- Integrales maestras: sólo es necesario calcular las integrales maestras explícitamente; forman una base que depende del criterio de ordenación elegido.
+- Herramientas: programas públicos como FIRE, Reduze y Kira realizan reducciones IBP, usando métodos de campo finito y álgebra lineal dispersa para mejorar rendimiento.
 
-## Cómo preparar un job mínimo para `kira` (orientativo)
+Ejemplo (bosquejo):
 
-1. Crear un fichero con la definición de la topología, las integrales y las reglas (ej. `kira_job.yaml` o formato que requiera la versión instalada).
-2. Ejecutar:
+Para la función de dos puntos de un bucle con masas iguales, las identidades IBP permiten reducir integrales con índices $(\nu_1,\nu_2)$ a las maestras $I_{1,1}$ e $I_{1,0}$ (burbuja y tadpole). Consulte la referencia para la derivación completa y los diagramas.
 
-```bash
-kira --job kira_job.yaml --output kira_results.txt
-```
+Observaciones:
 
-o, en interfaces que aceptan comandos directos:
+- Diferentes elecciones de orden (dot-basis, ISP-basis) conducen a conjuntos de maestras distintos en la práctica.
+- La reducción IBP es algebraica sobre funciones racionales en variables cinemáticas y la dimensión $D$; la simplificación de funciones racionales suele ser el cuello de botella en rendimiento.
 
-```bash
-kira --reduce "I(indices) = definition" --method ibp --out kira_results.txt
-```
-
-Recomendación: consulte `recursos/Kira2.pdf` y `recursos/Kira3.pdf` para parámetros, formatos de topología y opciones de paralelización.
-
-## Pistas prácticas y recomendaciones
-
-- Compruebe siempre las simetrías del grafo para reducir el número de integrales independientes antes de la reducción.
-- Use estrategias de sector decomposition / selección de reducción para limitar el coste computacional.
-- Genere y almacene tablas de reducción intermedias para reusar resultados.
-- Tras obtener los masters, considere usar el método de ecuaciones diferenciales y buscar una transformación al $\varepsilon$-form si fuese posible (ver `recursos/IBP.pdf`).
-
-## Reproducibilidad y licencias
-
-He resumido y reinterpretado el material presente en los PDFs de `recursos/`. Si quieres que incorpore citas textuales o fragmentos largos, indícamelo y los extraigo (añadiendo la referencia BibTeX en `book/_static/references.bib` si procede).
+Referencia: contenido resumido y convertido desde `recursos/IBP.pdf` (capítulo sobre integrales iteradas y sección 6.1 sobre IBP).
 
 ---
-

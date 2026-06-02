@@ -1,0 +1,579 @@
+arXiv:1901.07808v3  [hep-ph]  10 Feb 2019FIRE6: Feynman Integral REduction with Modular
+Arithmetic
+A.V. Smirnova,b,∗, F.S. Chukharevc
+aResearch Computing Center, Moscow State University,
+119992 Moscow, Russia
+bInstitut für Theoretische Teilchenphysik, Karlsruhe Institut e of Technology (KIT),
+76128 Karlsruhe, Germany
+cFaculty of Computational Mathematics and Cybernetics, Mosc ow State University,
+119992 Moscow, Russia
+Abstract
+FIREis a program performing reduction of Feynman integrals to ma ster in-
+tegrals. The C++version of FIRE was presented in 2014. There have been
+multiple changes and upgrades since then including the poss ibility to use
+multiple computers for one reduction task and to perform red uction with
+modular arithmetic. The goal of this paper is to present the c urrent version
+ofFIRE.
+Keywords: Feynman diagrams, Multiloop Feynman integrals, Dimension al
+regularization, Computer algebra, Modular arithmetic, Su percomputers
+∗Corresponding author
+Email addresses: asmirnov80@gmail.com (A.V. Smirnov),
+fedor.s.chukharev@gmail.com (F.S. Chukharev)
+Preprint submitted to Computer Physics Communications Febru ary 12, 2019
+PROGRAM SUMMARY
+Manuscript Title: FIRE6 Feynman Integral REduction with Modular Arithmetic
+Authors: A.V. Smirnov, F.S. Chukharev
+Program title: FIRE, version 6 (FIRE6)
+Licensing provisions: GPLv2
+Programming language: Wolfram Mathematica 6.0 or higher, C++
+Computer(s) for which the program has been designed: starting from a desktop PC
+up to a supercomputer
+Operating system(s) for which the program has been designed :Linux 64bit, Mac
+OS X 10.6 or higher 64bit
+RAM required to execute with typical data: depends on the complexity of the prob-
+lem
+Has the code been vectorized or parallelized?: yes
+Number of processors used: depending on the mode and the complexity of the
+task, the program can both run single-threaded on a laptop, o r use a supercom-
+puter (tested with up to 2024 cores)
+Supplementary material: The article, install instructions,
+https://bitbucket.org/feynmanIntegrals/ﬁre
+Keywords: Feynman diagrams, Multiloop Feynman integrals, Dimension al regular-
+ization, Computer algebra
+CPC Library Classiﬁcation: 4.4 Feynman diagrams, 4.8 Linear Equations and Ma-
+trices, 5 Computer Algebra, 20 Programming and Publication Practice
+External routines/libraries used: Wolfram Mathematica [1],Snappy [2],ZStandard
+[3],KyotoCabinet [4],Fermat [5],LiteRed [6]
+Nature of problem: Reducing Feynman integrals to master integrals can be treat ed
+as a task to solve a huge system of sparse linear equations wit h polynomial coeﬃ-
+cients.
+Solution method: Since the matrix of equations is very speciﬁc, none of standa rd
+methods of solving linear equations can be applied eﬃcientl y. The program ap-
+proaches solving those equations with a special version of G auss elimination. In
+complex cases the direct reduction approach might fail, so t he approach with mod-
+ular arithmetic is used, where the reduction is performed mu ltiple times with diﬀer-
+ent values of variables over large prime number ﬁelds, after wards the coeﬃcients are
+reconstructed. The data preparation and result analysis is performed in Wolfram
+Mathematica [1], but the main reduction procedure is written in C++;FIREcom-
+presses data with the use of the Snappy [2] orZStandard [3] library, stores it on
+disk with the use of the KyotoCabinet [4] database engine, and performs algebraic
+simpliﬁcations with the Fermat [5] program. The external package LiteRed [6] can
+2
+be used to produce additional rules for reduction.
+Restrictions: The complexity of the problem is mostly restricted by CPU tim e re-
+quired to perform the reduction of integrals and the availab le RAM. The program
+has the following limits: maximal number of indices = 22, max imal number of pos-
+itive indices = 15, maximal number of non-trivial sectors = 128×256−3 = 32765
+(global symmetries decrease the number of sectors, indices that cannot be positive
+do not double the number of sectors). FIRE6 follows the C++11 standard, so re-
+quiresgcc 4.8.1 or higher to be compiled, but works with the current gcc 7.3 as
+well.
+Running time: depends on the complexity of the problem
+References:
+[1]http://www.wolfram.com/mathematica/ , commercial algebraic software;
+[2]https://github.com/google/snappy , open source;
+[3]https://github.com/facebook/zstd , open source;
+[4]http://fallabs.com/kyotocabinet/ , open source;
+[5]https://home.bway.net/lewis/ , free–ware with some restrictions for organi-
+zations;
+[6]http://www.inp.nsk.su/~lee/programs/LiteRed/ , open source.
+3
+1. Introduction
+Feynman integrals are fundamental objects arising in moder n elementary
+particle physics. The problems being considered currently result in millions of
+Feynman integrals that have to be evaluated. A classical app roach is to apply
+integration by parts (IBP) relations [1] (see Chapter 6 of [2] for a review)
+and reduce all integrals to a smaller set, the so-called master integrals1. The
+ﬁrst approach to integration by parts relations was based on solving those
+equations by hand. This procedure was used in many papers sta rting from [1]
+before the appearance of computer codes to solve IBP relatio ns.
+Currently there is a number of programs that can perform Feyn man in-
+tegral reduction, some of those are public, some are private . Most of the
+existing programs are based on the Laporta algorithm [4] (Ga uss elimina-
+tion after choosing an ordering), in particular, the public codes described
+in [5, 6, 7, 8, 9, 10]. However there were also attempts based o n constructing
+explicit rules when solving IBP relations, both by one of the authors of this
+paper [11, 12, 13], as well as by R.Lee in his program LiteRed [14, 15, 16].
+A recent approach to the reduction is based on modular arithm etic. While
+the direct reduction might be too complex because of the grow th of coeﬃ-
+cients, one can ﬁx diﬀerent values of variables and also perf orm reduction
+over ﬁelds of remainders over large prime numbers instead of rationals. Those
+numbers ﬁt into machine-size integers, so the reduction can run signiﬁcantly
+faster. However, to recover coeﬃcients afterwards one has t o run a rather
+large number of reduction jobs. This approach has already be en presented
+in reduction programs Finred [17] and Kira [9].
+One of the authors of this paper created the program FIRE(Feynman in-
+tegral reduction) about ten years ago. The initial version o fFIRE[18, 19] was
+written in Wolfram Mathematica , later aC++version was also published [20].
+The goal of this paper is to present the new version of FIRE that was
+developed during recent years. We consider FIRE6 to be a major release
+signiﬁcantly diﬀering from the previous public version. It was already suc-
+cessfully applied in [21, 22, 23, 24, 25, 26] — the result obta ined in those
+papers were most probably unachievable with the previous ve rsions of FIRE.
+In particular, the ﬁrst example of a calculation which was ma de real by the
+use of FIRE with modular arithmetic can be found in [27].
+The new version brings a performance upgrade, being about tw ice as fast
+1It has been shown in [3] that the number of master integrals is always ﬁnite.
+4
+than the previous public version on small tests. However the main power
+comes at problems being “at the edge of science” since the mem ory economy
+and stability features results in a “can be done — cannot be do ne” diﬀerence.
+Along with a performance upgrade, the new version contains a number
+of new features, including but not limited to the following:
+•usage of internal sector symmetries from LiteRed ;
+•possibility to recover from system crashes without a restar t from the
+very beginning;
+•possibility to use multiples nodes on one reduction task;
+•modular arithmetic approach;
+•MPI-approach to run multiple modular arithmetic tasks on a s uper-
+computer;
+In section 2 we recall basic deﬁnitions related to Feynman in tegrals, in
+section 3 we describe how to install FIREand in section 4 how to use it. Sec-
+tion 5 explains the internals of FIREwhich might be important for choosing
+options eﬃciently, section 6 is devoted to the usage of modul ar arithmetic,
+and in the appendix we summarizes all options of conﬁg ﬁles.
+This paper can also serve as a user manual for FIRE6 . Additional infor-
+mation and examples can be found in the FIREdistribution. The new version
+ofFIRE(starting with 6.1) is also covered with the doxygen documentation
+which can be usefull for contributors, bug ﬁnding or those wh o wish to use
+some internal functions. Details how to build and read this d ocumentation
+are also provided below.
+2. Basic deﬁnitions
+Let us remind the basic deﬁnitions that will be used in this pa per. Feyn-
+man integrals are functions of integer variables which are a lso called indices,
+F(a1,...,a n) =/integraldisplay
+···/integraldisplayddk1...ddkh
+Ea1
+1...Eann. (1)
+Here the factors Eiin the denominator are linear functions with respect to
+scalar products of loop momenta kiand external momenta pi; dimensional
+regularization with d= 4−2ǫis applied.
+5
+One considers the so-called integration by parts relations [1]
+/integraldisplay
+.../integraldisplay
+ddk1ddk2...∂
+∂ki/parenleftBigg
+pj1
+Ea1
+1...Eann/parenrightBigg
+= 0 (2)
+They can be rewritten as:
+/summationdisplay
+αiF(a1+bi,1,...,a n+bi,n) = 0. (3)
+wherebi,j∈ {−1,0,1}andαiare linear functions of aj.
+It is already standard to use the notion of sectors during red uction. There
+are2nsectors, each of those deﬁned by specifying a subset of indic es that
+have to be positive (and the remaining have to be non-positiv e). Each sector
+has a unique so-called corner integral , that is the one with indices equal to 0
+or1.
+We will deﬁne a sector to be lower than another sector if all indices of the
+corner integral in the ﬁrst one are smaller than the correspo nding indices of
+the corner integral in the second one. Basically integrals i n lower sectors are
+simpler, so starting from the time of reduction “by hand” one tries to reduce
+Feynman integrals to ones in lower sectors.
+We will call a sector trivial if all integrals corresponding to sets of indices
+in this sector are equal to zero. It is known that the lowest se ctor, where
+all indices are non-positive, is trivial, but in fact a large number of sectors
+are trivial. The conditions determining whether a sector is trivial are called
+boundary conditions .
+3. Installation
+FIRE6 is distributed via bitbucket. One can also download a binary pack-
+age compiled on Ubuntu 16.04 or openSUSE 15.0 from the downlo ad section
+of the repository ( https://bitbucket.org/feynmanIntegrals/fire/ ), but
+the recommended way is to build FIREfrom sources.
+To do it one has to
+1) clone it with git(this should be done in a folder that has no space
+symbols in its full path)
+git clone https://bitbucket.org/feynmanIntegrals/fire .git
+6
+As a result a fire/FIRE6 folder will appear. The firefolder name can
+be later changed if needed, however it is not recommended to c hange the
+name of the internal folder FIRE6 to be able to receive updates with git
+pull. So now one can move to the internal folder with cd fire/FIRE6 .
+To receive updated one can pull them from the repository
+git pull
+For details please refer to git manuals since this paper cann ot cover all
+those.
+2) conﬁgure FIRE. There is a configure ﬁle in the folder that can be run
+with
+./configure
+This ﬁle is not a part of the autoconf system, but a simple scri pt that
+sets some preprocessor variables and makeﬁles correspondi ng to the settings
+provided to ./configure There are the following options:
+• −−enable_zlib : enables the zlib compressor shipped with kyotocabi-
+net, requires the zlib/deﬂate library (zlib1g-dev) to be in stalled system-
+wide;
+• −−enable_snappy : tries to build the snappy library shipped with FIRE
+to serve as a compressor;
+• −−enable_zstd : tries to build the zstandard library shipped with
+FIREto serve as a compressor;
+• −−enable_debug : adds -g to compile options for debugging symbols
+and also attaches hooks for printing out stack trace in case o f crashes;
+• −−enable_tcmalloc : compiles google perf tools in order to make FIRE
+use tcmalloc instead of the libc malloc;
+7
+• −−enable_lthreads : givesFIRE possibility to use multiple threads
+inside a sector".
+The ﬁrst two options are related to compressor settings of th e database
+engine. By default FIRE6 uses the lz4compressor which comes shipped
+withFIRE and is easiest to build. The −−enable_debug option is self-
+explanatory, the −−enable_tcmalloc option might provide signiﬁcant mem-
+ory economy and the lthreads option provides a better parallelization re-
+source (details will be explained below).
+The options of configure are saved in the previous_options ﬁle.
+3) build the libraries that are shipped with FIRE
+make dep
+This command builds kyotocabinet ,lz4,snappy (in the case where
+−−enable_snappy is set),zstandard (in the case where −−enable_zstd
+is set) and google perf tools (if conﬁgured with the −−enable_tcmalloc
+option). As usual, one can use the -j N option where Nis the number of
+cores to run compilation faster. As a result, the libraries a re “installed” in
+theusrsubfolder of fire/FIRE6 .
+4) buildFIRE
+make
+the simlinks to binaries are located in the binfolder.FIRE builds a
+number of binaries, with or without pat the end of the name. The pbinaries
+are the modular arithmetic version of FIRE(comes from “prime”). The objects
+and binaries themselves are created in the polyandprime folders. Both of
+them contain the FIRE6 ,FLAME6 andFTool6 binaries. The FIRE6 is the main
+binary,FLAME6 is used for sector jobs and FTool6 is an auxiliary binary that
+can be used for database analysis.
+5) run tests
+8
+make test
+The new version of FIRE has a set of tests that are also available at
+bitbucket via bitbucket pipelines.
+6) To build the mpiversion of FIRE(for use on supercomputers) one has
+to run
+make mpi
+This version can also be tested on a personal computer in case theopenmpi
+libraries are installed system-wide. The mpicxx binary is called for this com-
+pilation, this can be changed by editing mpi/Makefile .
+7) The development of FIREnow follows the gitﬂow strategy. The master
+branch only receives hotﬁxes and is moved mostly when a new re lease is being
+prepared. Both the master and the dev branches are changed on ly with pull
+requests, and a bunch of tests is performed via bitbucket pip elines before
+such a pull request can be merged. The dev branch however can r eceive
+changes much faster, so if one is willing to receive updates b etween releases,
+the dev branch has to be chosed.
+git checkout dev
+After that everything should be recompiled.
+8) TheFLink andKLink binaries are no longer a part of the FIREdistri-
+bution, so there are no more instructions on how to build them .
+9) The doxygen documentation can be built with
+make doc
+make pdf
+9
+The ﬁrst command builds doxygen html and latex documentatio n. It re-
+quires doxygen to be installed. The mein generated index ﬁle of the html doc-
+umenntation is documentation/html/index.html . The second command
+can also build a pdf manual from the latex version and require d pdﬂatex to
+be installed. If successful, it created the documentation/refman.pdf ﬁle. If
+thexdg-open utility is installed, the documentation in its html format c an
+be also opened with
+make showdoc
+4. Basic usage of FIRE
+FIREhas a part written in Wolfram Mathematica and a much bigger part
+written in C++. WhileFIREis able to perform reduction by the Mathematica
+part, it should be used mainly for tests and for simple tasks. Partially be-
+cause of that the support of calls to fermat and the database engine from
+Mathematica were removed in the current version. If a problem is complex
+enough that Mathematica cannot handle it with ease, one should use the C++
+part.
+The proper approach to use FIREfor complicated problems is the follow-
+ing. First one should create a start ﬁle in Mathematica . Then this ﬁle is used
+by theC++part to run the reduction, afterwards tables are created whi ch can
+be read by Mathematica in order to produce results. Moreover it is strictly
+recommended to use LiteRed in order to produce symmetries before running
+the reduction.
+4.1. Preparing a start ﬁle
+TheMathematica part ofFIREis loaded simply with
+Get["FIRE6.m"];
+10
+provided that the currect directory is set to fire/FIRE6 . The recommen-
+dation to set the FIREPath variable used in previous versions is no longer
+valid.
+Like in previous versions one has to prepare a start ﬁle to use FIRE. Such
+a ﬁle contains information on the reduction of one family of F eynman inte-
+grals — dimension, sectors, integration-by-parts relatio ns. To have backward
+compatibility we keep the syntax at this stage. One has to set the following
+variables.
+•Internal — the list of internal momenta, for example, {k};
+•External — the list of external momenta, for example, {p1, p2, p4};
+one should list only linearly independent external momenta after having
+used momentum conservation;
+•Propagators — the list of propagators, for example, {-k2, -(k + p1)2,
+-(k + p1 + p2)2, -(k + p1 + p2 + p4)2}; the propagators should be
+quadratic in terms of momenta;
+•Replacements (optional) — the list of replacement rules for kinematic
+invariants, for example, {p12-> 0, p22-> 0, p42-> 0, p1 p2 -> s/2,
+p2 p4 -> t/2};
+There are also two more variables that were usually set in pre vious ver-
+sions but can be skipped now.
+•RESTRICTIONS (optional) — list of boundary conditions. For example
+if this list has an element {-1, -1, -1, 0} , this means that the inte-
+grals are equal to zero if the ﬁrst three indices are non-posi tive. Since
+currently FIREcan detect boundary conditions automatically in most
+cases, this option can be skipped. Moreover, the usage of LiteRed can
+detect even more boundary conditions at a later stage. Still , if this
+variable is set, those restrictions are also used;
+•SYMMETRIES (optional) — list of symmetries (permutations of indices
+not changing the integrals, each element consists of list po sitions); in
+older versions one had to provide the whole symmetry group, b ut cur-
+rently it is enough to provide the generators; for example, i f this list has
+an element {3, 2, 1, 4} , this means that F[a,b,c,d]=F[c,b,a,d] .
+In principle, the use of symmetries can speed up the reductio n, however
+11
+in caseLiteRed is used, it can also detect equivalent sectors and create
+corresponding mapping rules. This will be somewhat slower c ompared
+to the use of global symmetries, but we estimate the diﬀerenc e as rel-
+atively small.
+If one wishes to set the integration by parts relations manua lly, there is
+a special variable startinglist that should be set (see [20] for details).
+Now one has to run the PrepareIBP[] and then Prepare[] commands.
+The second one leads also to the autodetection of boundary co nditions. This
+can be turned oﬀ by running
+Prepare[AutoDetectRestrictions -> False]
+instead. The command also has a parallel option run with
+Prepare[Parallel -> True]
+Now a start ﬁle can be saved with SaveStart["filename"] . It is recom-
+mended to quit the kernel afterwards.
+p1
+1
+5
+p22p3
+7
+p43
+6
+4
+Figure 1: Massless on-shell doublebox
+12
+For example, for a double box diagram with massless lines, in coming
+momenta p1,p2andp3andp12= 0, p22= 0, p32= 0, (p1+p2+p3)2=
+0, s = (p1 + p2)2, t = (p1 + p3)2one has:
+Get["FIRE6.m"];
+Internal = {k1, k2};
+External = {p1, p2, p3};
+Propagators = {-k12, -(k1 + p1 + p2)2, -k22, -(k2 + p1 +
+p2)2, -(k1 + p1)2, -(k1 - k2)2, -(k2 - p3)2, -(k2 + p1)2,
+-(k1 - p3)2};
+Replacements = {p12-> 0, p22-> 0, p32-> 0, p1 p2 -> s/2,
+p1 p3 -> t/2, p2 p3 -> -1/2 (s + t)};
+PrepareIBP[];
+Prepare[];
+SaveStart["doublebox"];
+Quit[];
+As a result one has a ﬁle "doublebox.start" containing all the required
+information to proceed.
+Please note that start ﬁles created by old versions of FIRE(public versions
+up to 5.2 and some private versions) cannot be used by the curr entC++part.
+They have to be either recreated or converted by the ConvertStart[oldfile,
+newfile] command.
+4.2. Reduction in Wolfram Mathematica
+The start ﬁle can be loaded in Mathematica with the LoadStart com-
+mand. For example,
+Get["FIRE6.m"];
+LoadStart["doublebox", 1];
+Burn[]
+13
+The second argument is the number assigned to the current fam ily of
+Feynman integrals. It is recommended to have diﬀerent numbe rs for diﬀerent
+families, this will allow one to distinguish integrals belo nging to diﬀerent
+families and to ﬁnd equivalents between them later. This sho uld be a positive
+number ﬁtting an unsigned short integer (less than 216).
+In complicated situations Burn[] might work slowly. Hence one can run
+SaveData["filename" afterBurn[] , then quit the kernel and later load ev-
+erything with LoadData["filename"] (without LoadStart andBurn).
+Now one can perform the reduction with
+F[1, {1, 1, 1, 1, 1, 1, 1, -1, -1}]
+HereFis a call to perform the reduction, “ 1” is the same number as in
+LoadStart and{1, 1, 1, 1, 1, 1, 1, -1, -1} is the set of indices. As
+a result one has an expression of the form
+3/2 s G[1,{1,1,1,1,1,1,1,-1,0}] + 1/2 s t
+G[1,{1,1,1,1,1,1,1,0,0}] + ...
+where the dots refer to further terms that have been omitted f or brevity. In
+the resulting expression Gfollows the same notation as Fbut is treated as an
+irreducible (master) integral and does not lead to new reduc tion.
+As it has been mentioned earlier, running complicated reduc tions in
+Mathematica is not recommended. But in case this reduction is performed
+it is strictly recommended to avoid the Fcommand which reduced inte-
+grals one by one and to use the more similar to the C++mode command
+EvaluateAndSave . It has two arguments: the list of integrals that has to
+be reduced and the ﬁle where to save tables. For example, to re duce two
+integrals by this command one should run
+EvaluateAndSave[{{1, {1, 1, 1, 1, 1, 1, 1, -1, -1}},
+{1, {1, 1, 1, 1, 1, 1, 1, 0, -2}}},"doublebox.tables"]
+14
+This command creates the tables ﬁle which can be loaded, and t hen the
+Fcommand can be used to produce results.
+4.3. Loading the tables
+The tables created with the EvaluateAndSave or with the C++version can
+be loaded with the LoadTables command. In case multiple tables are to be
+loaded one should pass all ﬁle names in a list to a single call t oLoadTables .
+LoadTables[{file1,file2, ...,fileN}]
+Now a call to Fwill take the result from tables. Sometimes this can be
+slow because FIRE tries to factorize coeﬃcients in order to present a nice-
+looking result. This behavior can be switched oﬀ by FactorCoefficients
+= False .
+In case one prefers to use the tables without loading start ﬁl e and the F
+syntax, they can be converted into Mathematica rules. The command for
+this is
+Tables2Rules[filename, Func: Identity, JoinTerms: True]
+It is not required to load start ﬁles to use this command and ge t a list
+ofMathematica rules as a result. The ﬁrst argument is the ﬁle name with
+tables. The second (optional) argument is the function that is applied to
+all coeﬃcients, where default value is Identity meaning no function and a
+reasonable choice can be Factor orTogether . The third (optional) argument
+is the indication whether the right-hand side is transforme d into a sum of
+integrals with coeﬃcients. Setting it to False provides a list of pairs (an
+integral and a coeﬃcient) which can be usefull in case of furt her automatic
+processing of results.
+15
+4.4.C++reduction
+As it has been mentioned a few times above, the reduction shou ld be run
+with the C++part of the program. As a result it created tables that can be
+loaded into Mathematica afterwards.
+To run the C++version, one has to create a conﬁguration ﬁle (with the
+config extension). All options of conﬁg ﬁles will be discussed belo w, but let
+us ﬁrst illustrate the syntax with this example:
+#variables d, s, t
+#start
+#folder examples/
+#problem 1 doublebox.start
+#integrals doublebox.m
+#output doublebox.tables
+The spaces are insigniﬁcant, each line should start from #(nowadays
+called the hash symbol). #variables should list all variables that can ap-
+pear. If variables are set incorrectly, the reduction will f reeze due to fermat.
+The#folder command is optional and provides a path to a folder where
+ﬁles listed by the following commands reside (unless specﬁe d with an ab-
+solute path). If the folder instruction is missing, the path s are considered
+absolute or from the “current” directory. #problem followed by the number
+corresponding to the current family of Feynman integrals an d the path to a
+start ﬁle. #integrals points to a ﬁle containing a list of integrals that have
+to be reduced and #output points to a ﬁle where the resulting tables are to
+be saved. The input is a Mathematica list of pairs, for example, {{1, {1,
+1, 1, 1, 1, 1, 1, -1, -1}}, {1, {1, 1, 1, 1, 1, 1, 1, 0, -2}}} .
+Now the reduction can be launched with
+bin/FIRE6 -c examples/doublebox
+It should be stated once more that this reduction does not nee dMathema-
+tica. As a result one gets a ﬁle containing reduction results — exp ressions
+of integrals via master integrals.
+4.5. Using LiteRed rules inMathematica
+LiteRed is a program by R. Lee [14, 15, 16] that aims at solving the IBP
+relations before the substitution of indices. This is an alt ernative approach
+16
+to the IBP reduction. However even without reduction rules t heLiteRed
+program can provide important information that should be us ed inFIRE.
+This information consists of
+•Boundary conditions (the knowledge all integrals in some se ctors are
+equal to zero);
+•External symmetries (mappings between diﬀerent sectors);
+•Internal symmetries (mappings inside sectors);
+•Reduction rules in some sectors (we normally avoid this, but sometimes
+it can help).
+Currently FIRE comes shipped with the version 1.8ofLiteRed . It is
+recommended not to use LiteRed downloaded elsewhere since there can be
+a diﬀerence in ﬁle formats.
+If one wishes to upgrade to the most recent version of LiteRed it can
+be downloaded from http://www.inp.nsk.su/~lee/programs/LiteRed/ ,
+however we cannot guarantee their compatibility.
+Please note that LiteRed is not a part of FIRE but a program having
+another author. Therefore, when using LiteRed options one should give
+proper credit to LiteRed program by citing [14, 15, 16].
+To useLiteRed rules one has to construct them ﬁrst. There are multiple
+examples shipped with the LiteRed package, let us consider one of them, the
+two-loop massless onshell vertex.
+p
+q
+Figure 2: Two-loop massless onshell vertex.
+In the context of FIREit is convenient to call LiteRed rules construction
+with
+17
+SetDirectory["extra/LiteRed/Setup/"];
+Get["LiteRed.m"];
+SetDirectory["../../../"];
+Get["FIRE6.m"];
+Internal = {l, r};
+External = {p, q};
+Propagators = {-(l - r)2, -l2, -r2, -(-l + p)2, -(q - r)2,
+-(-l + p + r)2, -(l + q - r)2};
+Replacements = {p2-> 0, q2-> 0; p q -> -1/2};
+CreateNewBasis[v2, Directory -> "temp/v2.dir"];
+GenerateIBP[v2];
+AnalyzeSectors[v2, {0, __}];
+FindSymmetries[v2,EMs->True];
+DiskSave[v2];
+Quit[];
+Note:CreateNewBasis is a not a command of LiteRed , it is a command
+inFIREthat translates FIREinput into LiteRed input.
+Here the extra/LiteRed/Setup/ is inside the FIRE6 folder,v2is a name
+fo the diagram used inside LiteRed .
+TheAnalyzeSectors command ﬁnds trivial sectors. The last parameter
+in this example assumes the one is considering integrals wit h non-positive
+ﬁrst index. In other cases one should move the position of the zeros and
+underscore wildcards.
+TheFindSymmetries command ﬁnds symmetric sectors meaning those
+that can be mapped as sums to other sectors, the EMs->True option stands for
+the autodetection of external symmetries. For other syntax variants please
+refer toLiteRed examples.
+BeforeDiskSave one can also invoke the SolvejSector command in order
+to construct rules for some sectors. However our experience shows that one
+is advised to be careful with it because partial rules can deg rade performance
+of the Laporta approach.
+As a result one gets a folder with multiple ﬁles containing in formation on
+the chosen family of Feynman integrals. They can be loaded in Mathematica
+with
+18
+Get["FIRE6.m"];
+LoadStart["examples/v2", 2];
+LoadLRules["temp/v2.dir", 2];
+Burn[];
+Here “2” stands for the problem number that should be the same in both
+lines. The LoadLRules command reads the directory with LiteRed rules
+and loads everything it can use out of there. Then the reducti on can be
+performed as before.
+4.6. Using LiteRed rules inC++
+TheC++version is not capable of parsing the LiteRed folder directly,
+they have to be converted ﬁrst. It can be done with
+Get["FIRE6.m"];
+LoadStart["examples/v2"];
+TransformRules["temp/v2.dir", "examples/v2.lbases", 2 ];
+SaveSBases["examples/v2"];
+Here2is the problem number. It is important to mention that the res ult
+of theTransformRules command is both a lbases ﬁle and a new ﬁle with the
+sbases extension that should be used instead of the original start ﬁ le. The
+syntax of those ﬁles is currently the same (sbases comes from a deprecated
+idea to use Groebner bases in order to run the reduction), how ever we keep
+diﬀerent extensions in order to distingush the original sta rt ﬁle and the result
+ofTransformRules . The new ﬁle contains some extra information compared
+with the original start ﬁle such as sector priorities, order ings, extra boundary
+conditions.
+Now the conﬁg ﬁle can be changed and should contain the follow ing lines:
+19
+#problem 2 v2.sbases
+#lbases v2.lbases
+It is worth to mention that lbases ﬁles created by old version s ofFIRE(up
+to public 5.2 and some private versions) do not contain inter nal symmetries
+and should be re-created.
+4.7. Finding equivalents between master integrals
+Extra master integrals that are equivalent to each other can degrade per-
+formance a lot for ﬁnal reductions. Normally the usage of Litered should re-
+sult in having no equivalent masters. However sometimes the y can still exist.
+In order to ﬁnd equivalents one should use the FindRules andWriteRules
+commands.
+In the doublebox example the MasterIntegrals[] command can be used
+to obtain the list of masters:
+{{1, {0, 0, 0, 0, 1, 1, 1, 0, 0}}, {1, {0, 0, 1, 1, 1, 1, 0,
+0, 0}}, {1, {0, 0, 1, 1, 1, 1, 1, 0, 0}}, {1, {0, 1, 1, 0,
+0, 1, 0, 0, 0}}, {1, {0, 1, 1, 0, 1, 1, 1, 0, 0}}, {1, {1,
+0, 0, 1, 0, 1, 0, 0, 0}}, {1, {1, 0, 0, 1, 1, 1, 1, 0, 0}},
+{1, {1, 1, 0, 0, 0, 1, 1, 0, 0}}, {1, {1, 1, 0, 0, 1, 1, 1,
+0, 0}}, {1, {1, 1, 1, 1, 0, 0, 0, 0, 0}}, {1, {1, 1, 1, 1,
+1, 1, 1, 0, 0}}, {1, {1, 1, 1, 1, 1, 1, 1, -1, 0}}}
+It is easy to see that some of the integrals in lower sectors ar e equivalent.
+This can be found with
+Internal = {k1, k2};
+External = {p1, p2, p3};
+20

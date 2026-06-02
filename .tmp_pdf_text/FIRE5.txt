@@ -1,0 +1,679 @@
+arXiv:1408.2372v2  [hep-ph]  1 Sep 2014SFB/CPP-14-60
+FIRE5: a C++ implementation of Feynman Integral
+REduction
+A.V. Smirnova,∗
+aScientiﬁc Research Computing Center, Moscow State Universit y, 119992
+Moscow, Russia
+Abstract
+In this paper the C++version of FIRE is presented — a powerful program
+performing Feynman integral reduction to master integrals . All previous
+versions used only Wolfram Mathematica , the current version mostly uses
+Wolfram Mathematica as a front-end. However, the most complicated part,
+the reduction itself can now be done by C++, which signiﬁcantly improves
+the performance and allows one to reduce Feynman integrals i n previously
+impossible situations.
+Keywords: Feynman diagrams, Multiloop Feynman integrals, Dimension al
+regularization, Computer algebra
+∗Corresponding author
+Email address: asmirnov80@gmail.com (A.V. Smirnov)
+Preprint submitted to Computer Physics Communications Sept ember 2, 2014
+PROGRAM SUMMARY
+Manuscript Title: FIRE5: a C++ implementation of Feynman Integral REduction
+Authors: A.V. Smirnov
+Program title: FIRE5
+Licensing provisions: GPLv2
+Programming language: Wolfram Mathematica 6.0 or higher, C++
+Computer(s) for which the program has been designed: starting from a desktop PC
+Operating system(s) for which the program has been designed :Linux 64bit
+RAM required to execute with typical data: depends on the complexity of the prob-
+lem
+Has the code been vectorized or parallelized?: yes
+Number of processors used: the program has been tested on computers with up
+to 32 cores, but it is not a requirement
+Supplementary material: The article, install instructions, http://science.sande r.su
+Keywords: Feynman diagrams, Multiloop Feynman integrals, Dimension al regular-
+ization, Computer algebra
+CPC Library Classiﬁcation: 4.4 Feynman diagrams, 4.8 Linear Equations and Ma-
+trices, 5 Computer Algebra, 20 Programming and Publication Practice
+External routines/libraries used: Wolfram Mathematica [1],Snappy [2],KyotoCa-
+binet [3],Fermat [4],LiteRed [5],
+Nature of problem: Reducing Feynman integrals to master integrals can be treat ed
+as a task to solve a huge system of sparse linear equations wit h polynomial coeﬃ-
+cients.
+Solution method: Since the matrix of equations is very speciﬁc, none of standa rd
+methods of solving linear equations can be applied eﬃcientl y. The program ap-
+proaches solving those equations with a special version of G auss elimination. The
+data preparation and result analysis is performed in Wolfram Mathematica [1], but
+the main reduction procedure is written in C++;FIREcompresses data with the use
+of theSnappy [2] library, stores it on disk with the use of the KyotoCabinet [3]
+database engine, and performs algebraic simpliﬁcations wi th theFermat [4] pro-
+gram. The external package LiteRed [5] can be used to produce additional rules
+for reduction.
+Restrictions: The complexity of the problem is mostly restricted by CPU tim e re-
+quired to perform the reduction of integrals and the availab le RAM. The program
+has the following limits: maximal number of indices = 21, max imal number of pos-
+itive indices = 15, maximal number of non-trivial sectors = 128×256−3 = 32765
+(global symmetries decrease the number of sectors, indices that cannot be positive
+do not double the number of sectors).
+2
+Running time: depends on the complexity of the problem
+References:
+[1]http://www.wolfram.com/mathematica/ , commercial algebraic software;
+[2]http://code.google.com/p/snappy/ , open source;
+[3]http://fallabs.com/kyotocabinet/ , open source;
+[4]https://home.bway.net/lewis/ , free–ware with some restrictions for organi-
+zations;
+[5]http://www.inp.nsk.su/~lee/programs/LiteRed/ , open source.
+3
+1. Introduction
+In modern elementary particle physics one often needs to eva luate thou-
+sands and millions of Feynman integrals. An already classic al approach is to
+apply the so-called integration by parts (IBP) relations [1] (see Chapter 6 of
+[2] for a recent review) and reduce all integrals to a smaller set, the master
+integrals1.
+There are multiple programs performing the task of Feynman i ntegral
+reduction, one of those presented by the author of this paper a few years
+ago. The initial version of FIRE[4, 5] was written in Wolfram Mathematica .
+For other public products see [6, 7, 8, 9, 10, 11]
+The goal of this paper is to present the C++version of FIRE— a powerful
+program for Feynman integral reduction. Recently FIREwas able to perform
+a reduction with about 3 billion integrals involved. It was s uccessfully applied
+in [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26] as w ell as in several
+pending projects.
+2. Basic deﬁnitions
+This section almost entirely copies the similar section fro m the previous
+paper on FIRE4 . However, the following deﬁnitions should be given to make
+the paper self-consistent.
+Let us consider a family of Feynman integrals as functions of ninteger
+variables (indices),
+F(a1,...,a n) =/integraldisplay
+···/integraldisplayddk1...ddkh
+Ea1
+1...Eann, (1)
+where the denominator factors Eiare linear functions with respect to scalar
+products of loop momenta kiand external momenta pi, and dimensional
+regularization with d= 4−2ǫis applied.
+The integration by parts relations [1]
+/integraldisplay
+.../integraldisplay
+ddk1ddk2...∂
+∂ki/parenleftBigg
+pj1
+Ea1
+1...Eann/parenrightBigg
+= 0 (2)
+1It has been shown in [3] that the number of master integrals is always ﬁnite, so
+theoretically, this approach should be successful.
+4
+can be rewritten in the following form:
+/summationdisplay
+αiF(a1+bi,1,...,a n+bi,n) = 0. (3)
+wherebi,j∈ {−1,0,1}andαiare linear functions of aj.
+A classical approach is to separate all possible sets of indi ces into so-called
+sectors. Choosing a sector (one out of 2n) deﬁnes for each index aiwhether
+it is positive or non-positive. In fact, there are less than 2nsectors — indices
+corresponding to irreducible numerators are always non-po sitive. A corner
+integral in a sector is the one with indices equal to 0or1; each sector has a
+unique corner integral.
+A sector is said to be lower than another sector if all indices of the corner
+integral in the ﬁrst one are smaller that corresponding indi ces of the corner
+integral in the second one. Normally one tries to reduce Feyn man integrals
+to those corresponding to lower sectors. The reason for such a choice is that
+positive shifts always come with multiplication by the corr esponding index,
+therefore relations written in sectors with negative value s of indices do not
+depend on integrals with positive values of those indices. M oreover, integrals
+are simpler if more indices are non-positive.
+The complexity of each integral corresponding to a given fam ily (1) is
+basically deﬁned by the number of positive indices, and then the two non-
+negative numbers N+=/summationtext
+i∈ν+(ai−1)(the number of dots) andN−=
+−/summationtext
+i∈ν−ai, whereν+(ν−) are sets of positive (negative) indices.
+A sector is called trivial if all integrals corresponding to sets of indices
+in this sector are equal to zero. The sector with all non-posi tive indices is
+always trivial. The conditions determining whether a secto r is trivial are
+called boundary conditions .
+ALaporta algorithm [27] in a given sector is solving IBPs with a Gauss
+elimination after choosing an ordering. The ordering choic e and all details
+of the algorithm can be modiﬁed by the algorithm implementer .
+3. Installation
+There are two ways to get FIRE5 — one can either download a bi-
+nary package from http://git.sander.su/fire/downloads or build it from
+sources. The binary package is not guaranteed to work at a par ticular ma-
+chine. To build FIRE5 from sources one has to
+1) clone it with git(it should be done in a folder that has no space
+symbols in its full path)
+5
+git clone https://bitbucket.org/feynmanIntegrals/fire .git
+2) install the libraries FIRE5 requires system-wide or build them from
+sources. FIRE comes with the database engine kyotocabinet 1.2.76 and
+compression library snappy 1.1.1 .
+make dep
+3) build the FIREbinaries
+make
+Do not forget to change the current directory to fire/FIRE5 before giving
+those commands. To build FIREand the depending libraries faster, add -j
+nto themakecommands as usual, where nis the number of kernels on the
+computer in use.
+To test whether the binaries were compiled properly run
+make test
+If one is compiling FIRE at a cluster and is going to use only the C++
+FIRE, it can be compiled it with
+make nomath
+To get the latest development version of FIRE, one should switch to the
+devbranch and compile FIREagain:
+git checkout –track -b dev origin/dev
+make
+FIRE5 comes with the external program fermat performing polynomial
+algebra. The only copyright statement of fermat on the web-page says
+“Fermat is free–ware. Those who have grant money are request ed to con-
+tribute $60 per installed machine.” Those who are not sure ho w this ap-
+plies to them should not use FIREbefore consulting with the fermat author
+(https://home.bway.net/lewis/ ). The version shipped with FIRE is the
+64-bit version 5.16 for Linux .
+As for other operating systems, FIRE works at Linux 32bit , but one
+should replace the fermat binary. It should also be possible to build FIREat
+MAC OS X , but there might be some problems during the installation. I f one is
+interested in building it at MAC OS X please contact the author of the paper,
+and perhaps we will work out the best way to do it, so that these instructions
+are included in the next release. And I do not think it is possi ble to make
+theC++ FIRE work under Windows .
+6
+4. Usage of FIRE
+All the syntax of FIRE5 is made backward-compatible with the syntax
+of the previous versions. This might look old-fashioned and the syntax is
+sometimes weird, however there are too many people who have b een using
+FIREfor quite some time.
+4.1. Preparing a start ﬁle
+The ﬁrst thing one needs to do to work with FIREis to prepare a start
+ﬁle containing the information on a given diagram. To do this , one needs to
+loadFIRE, deﬁne the internal (loop) and external momenta, the propag ators,
+the replacements (values of kinematic invariants). If one i s going to use C++,
+it is important to have all variables corresponding to kinem atic invariants to
+have no capital letters in their names (due to the restrictio ns of the fermat
+program).
+If one is loading FIREfromMathematica , it should either be loaded with
+SetDirectory[<path to FIRE>]; Get["FIRE5.m"];
+or
+FIREPath=<path to FIRE>; Get[FIREPath<>"FIRE5.m"]; .
+Do not load FIREby simply specifying a full path to it, might fail to work
+properly.
+The basic syntax to create a start ﬁle is the following: one ha s to give
+proper values to the following variables:
+•Internal — the list of internal momenta, for example, {k};
+•External — the list of external momenta, for example, {p1, p2, p4};
+•Propagators — the list of propagators, for example, {-k2, -(k + p1)2,
+-(k + p1 + p2)2, -(k + p1 + p2 + p4)2};
+•Replacements (optional) — the list of replacement rules for kinematic
+invariants, for example, {p12-> 0, p22-> 0, p42-> 0, p1 p2 -> s/2,
+p2 p4 -> t/2};
+•RESTRICTIONS (optional) — list of boundary conditions. For example if
+this list has an element {-1, -1, -1, 0} , this means that the integrals
+are equal to zero if the ﬁrst three indices are non-positive;
+7
+•SYMMETRIES (optional) — list of symmetries (permutations of indices
+not changing the integrals); in older versions one had to pro vide the
+whole symmetry group, but currently it is enough to provide t he gener-
+ators; for example, if this list has an element {3, 2, 1, 4} , this means
+thatF[a,b,c,d]=F[c,b,a,d] .
+After executing these commands one should run PrepareIBP[] and then
+Prepare or, preferably, Prepare[AutoDetectRestrictions -> True] to au-
+tomatically detect boundary conditions (in both cases the c onditions pro-
+vided by the RESTRICTIONS setting are taken into account). However if one
+is planning to use LiteRed [9, 10, 11] (see section 4.6), then FIREwill read
+boundary conditions from LiteRed output later, so it is not obligatory to
+provide them at the current stage.
+In older versions one also had to give a value to the startinglist variable
+to provide the list of IPBs. It is still possible, however is n ot obligatory.
+If thestartinglist is skipped, the code uses all IBP relations, where one
+multiplies by an internal or external momenta and diﬀerenti ates in an internal
+momenta, and then replacements are applied. Internally it u ses the following
+construction:
+startinglist = Flatten[Outer[(IBP[#1, #2] //.Replacemen ts) &,
+Internal, Join[Internal, External]], 1];
+Now a start ﬁle can be saved with SaveStart["filename"] . It is recom-
+mended to quit the kernel afterwards.
+For example, for a massless double box diagram one has:
+FIREPath = <path to the folder with FIRE>;
+Get[FIREPath<>"FIRE5.m"];
+Internal = {k1, k2};
+External = {p1, p2, p3};
+Propagators = {-k12, -(k1 + p1 + p2)2, -k22, -(k2 + p1 + p2)2,
+-(k1 + p1)2, -(k1 - k2)2, -(k2 - p3)2, -(k2 + p1)2, -(k1 - p3)2};
+Replacements = {p12-> 0, p22-> 0, p32-> 0, p1 p2 -> s/2,
+p1 p3 -> t/2, p2 p3 -> -1/2 (s + t)};
+PrepareIBP[];
+Prepare[AutoDetectRestrictions -> True];
+SaveStart["doublebox"];
+Quit[];
+As a result one has a ﬁle "box.start" containing all the required infor-
+mation to proceed.
+8
+4.2. Reduction in Wolfram Mathematica
+To perform the reduction by Mathematica (or to load tables at a later
+stage) one has to load a start ﬁle. This is done by the LoadStart command.
+For example,
+FIREPath = <path to the folder with FIRE>;
+Get[FIREPath<>"FIRE5.m"];
+LoadStart["doublebox", 1];
+Burn[]
+The second argument in LoadStart is some positive integer number less
+than1000that is assigned to the current family of Feynman integrals. If the
+problem has multiple families, it is recommended to enumera te them and use
+diﬀerent numbers for diﬀerent families.
+Now one can perform the reduction with
+F[1, {1, 1, 1, 1, 1, 1, 1, -1, -1}]
+HereFis a call to perform the reduction, 1is the same number as in
+LoadStart and{1, 1, 1, 1, 1, 1, 1, -1, -1} is the set of indices. As
+a result one has something like
+3
+2sG(1,{1,1,1,1,1,1,1,−1,0})+1
+2stG(1,{1,1,1,1,1,1,1,0,0})+...
+In the resulting expression Gfollows the same notation as Fbut is treated
+as an irreducible (master) integral and does not lead to new r eduction.
+Alternatively one can use the EvaluateAndSave command, which has two
+arguments — the list of integrals that has to be reduced and th e ﬁle where
+to save tables. For example, to reduce two integrals by this c ommand one
+should run
+EvaluateAndSave[{{1, {1, 1, 1, 1, 1, 1, 1, -1, -1}},
+{1, {1, 1, 1, 1, 1, 1, 1, 0, -2}}},"doublebox.tables"]
+This is the recommended way to run Mathematica FIRE if the reduction
+takes long enough, however it is even better to use the C++ FIRE which is a
+direct replacement to the EvaluateAndSave command.
+In complicated situation Burn[] might work slowly. Hence one can run
+SaveData["filename" afterBurn[] , then quit the kernel and later load ev-
+erything with LoadData["filename"] (without LoadStart andBurn).
+9
+4.3. Finding equivalents between master integrals
+As one can clearly see from the last example, the integrals th atFIRE
+claims to be irreducible can be symmetric and thus equivalen t. Normally this
+happens with integrals from diﬀerent sectors of same level — FIRE cannot
+ﬁnd equivalents between them during the reduction run. Howe ver, there is
+an alternative method that can ﬁnd the missing relations.
+If in the last example one gives the MasterIntegrals[] command, the
+result is:
+{{1, {0, 0, 0, 0, 1, 1, 1, 0, 0}}, {1, {0, 0, 1, 1, 1, 1, 0, 0,
+0}}, {1, {0, 0, 1, 1, 1, 1, 1, 0, 0}}, {1, {0, 1, 1, 0, 0, 1, 0,
+0, 0}}, {1, {0, 1, 1, 0, 1, 1, 1, 0, 0}}, {1, {1, 0, 0, 1, 0, 1,
+0, 0, 0}}, {1, {1, 0, 0, 1, 1, 1, 1, 0, 0}}, {1, {1, 1, 0, 0, 0,
+1, 1, 0, 0}}, {1, {1, 1, 0, 0, 1, 1, 1, 0, 0}}, {1, {1, 1, 1, 1,
+0, 0, 0, 0, 0}}, {1, {1, 1, 1, 1, 1, 1, 1, 0, 0}}, {1, {1, 1, 1,
+1, 1, 1, 1, -1, 0}}}
+It is easy to see that some of the integrals in lower sectors ar e equivalent.
+This can be found with
+Internal = {k1, k2};
+External = {p1, p2, p3};
+Propagators = {-k12, -(k1 + p1 + p2)2, -k22, -(k2 + p1 + p2)2,
+-(k1 + p1)2, -(k1 - k2)2, -(k2 - p3)2, -(k2 + p1)2, -(k1 - p3)2};
+Replacements = {p12-> 0, p22-> 0, p32-> 0, p1 p2 -> s/2,
+p1 p3 -> t/2, p2 p3 -> -1/2 (s + t)};
+FindRules[MasterIntegrals[]]
+or saved to a ﬁle with
+WriteRules[MasterIntegrals[],
+FIREPath <> "examples/doublebox"];
+The command MasterIntegrals by itself is a replacement for the old
+GetII /& IrreducibleIntegrals[] and produces the list of integrals that
+FIREfound to be irreducible.
+Then if one loads the rules after Burn[] with
+LoadRules[FIREPath <> "examples/doublebox", 1];
+and performs the reduction again, there will be only 8master integrals instead
+of12.
+The ﬁle with rules consists of Mathematica rules, however the right-hand
+side should be not a linear combination, but a list of pairs — c oeﬃcients and
+integrals (in order to simplify parsing in C++). In our examples the ﬁle has 4
+lines, and they look like
+10
+G[1, {0, 0, 1, 1, 1, 1, 1, 0, 0}] ->
+{{1, G[1, {1, 1, 0, 0, 1, 1, 1, 0, 0}]}};
+G[1, {1, 0, 0, 1, 1, 1, 1, 0, 0}] ->
+{{1, G[1, {0, 1, 1, 0, 1, 1, 1, 0, 0}]}};
+G[1, {1, 1, 0, 0, 0, 1, 1, 0, 0}] ->
+{{1, G[1, {0, 0, 1, 1, 1, 1, 0, 0, 0}]}};
+G[1, {1, 0, 0, 1, 0, 1, 0, 0, 0}] ->
+{{1, G[1, {0, 1, 1, 0, 0, 1, 0, 0, 0}]}};
+If one knows some relations between master integrals, they c an also be
+added manually to the ﬁle with rules [5].
+4.4.C++reduction
+The main power of FIREcomes with the C++part of the program. It uses
+the same start and rules ﬁles as input and saves table ﬁles as a result so that
+they can be loaded into Mathematica afterwards.
+To run the C++version, one has to create a conﬁguration ﬁle (with the
+config extension). Let us illustrate the syntax with this example:
+#threads 4
+#variables d, s, t
+#start
+#folder examples/
+#problem 1 doublebox.start
+#integrals doublebox.m
+#output doublebox.tables
+The number of space symbols in this ﬁle in unimportant. Each l ine should
+start from #. The#threads command speciﬁes the number of threads that
+can work in parallel, #variables is important and should list all variables
+that can appear, if variables are set incorrectly, the reduc tion will freeze.
+These (and some other optional directives listed in section 5.2) should be
+followed by the #start command.
+The next part of the conﬁguration ﬁle is related to a speciﬁc d iagram.
+#folder is optional and provides a path to a folder where other ﬁles ca n
+reside. If the folder instruction is missing, the paths are c onsidered absolute
+or from the “current” directory. #problem followed by the number corre-
+sponding to the current family of Feynman integrals and the p ath to a start
+ﬁle.#integrals points to a ﬁle containing a list of integrals that have to
+be reduced and #output points to a ﬁle where the resulting tables are to be
+11
+saved. The input is a Mathematica list of pairs, for example, {{1, {1, 1,
+1, 1, 1, 1, 1, -1, -1}}, {1, {1, 1, 1, 1, 1, 1, 1, 0, -2}}} .
+Now one can launch the reduction with
+bin/FIRE5 -c examples/doublebox
+It should be stated once more that this reduction does not nee dMathe-
+matica . As a result one gets a ﬁle with tables. While the Mathematica
+reduction took 1453seconds on my laptop ( 1386seconds with rules), the
+C++reduction took only 92seconds. And for diagrams having more loops
+the diﬀerence can be much more signiﬁcant.
+This reduction can also make use of the rules previously save d in a ﬁle.
+To do that, add the following line to the conﬁguration ﬁle:
+#rules doublebox.rules
+This example also shows that the choice of master integrals m ight be
+diﬀerent in diﬀerent versions of FIRE. TheC++ FIRE tends to prefer integrals
+without negative indices, because it is impossible to ﬁnd eq uivalents in case
+of irreducible numerators. However in this particular exam ple the choice
+{{1, {1, 1, 1, 1, 1, 1, 2, 0, 0}}} instead of {{1, {1, 1, 1, 1, 1,
+1, 1, -1, 0}}} makes the answer more complicated. One can make FIRE
+do another choice by means of the preferred list. To do that, o ne should add
+#preferred doublebox.preferred
+to the conﬁguration ﬁle, where this ﬁle contains a Mathematica list of
+preferred master integrals. In this example this ﬁle contai ns one element,
+{{1, {1, 1, 1, 1, 1, 1, 1, -1, 0}}} . Now if one runs
+bin/FIRE5 -c examples/doubleboxrp
+the job will take only 62seconds.
+4.5. Loading the tables
+The tables obtained with the C++reduction (or with the EvaluateAndSave
+command in Mathematica ) can be loaded into Mathematica .
+FIREPath = <path to the folder with FIRE>;
+Get[FIREPath<>"FIRE5.m"];
+LoadStart["doublebox", 1];
+Burn[];
+LoadTables["doublebox.tables"];
+Now a call to Fwill not need a new reduction, but take the result from
+tables. However, sometimes this can be slow because FIREtries to factorize
+coeﬃcients in order to present a nice-looking result. This b ehavior can be
+switched oﬀ by FactorCoefficients = False .
+12
+4.6. Using LiteRed rules inMathematica
+LiteRed is a program by Lee [9, 10, 11] that aimes on solving the IBP
+relations before the substitution of indices. If the progra m succeeds, the
+reduction can be signiﬁcantly more eﬀective and fast. But ev en if reduction
+rules cannot be constructed everywhere, it makes sense to us e a part of them
+in order to speed up the reduction, or at least the informatio n on boundary
+conditions and symmetries.
+Currently FIREcomes shipped with the version 1.6ofLiteRed . If one
+wishes to upgrade to the most recent version of LiteRed without waiting for
+an update of FIRE, it can be downloaded from http://www.inp.nsk.su/~lee/programs/LiteRed/ .
+LiteRed starts with ﬁnding symmetric sectors. Two sectors are consi d-
+ered symmetric, if integrals from one of the sectors can be re presented as
+linear combinations of integrals in the other. LiteRed is quite eﬀective in
+ﬁnding symmetries between sectors and this procedure does n ot take much
+time. So even if one is working with complicated diagrams whe re the solution
+of IBPs cannot be performed, the symmetries should be taken i nto account.
+FIREis capable of loading LiteRed rules. To do this, one has to construct
+them ﬁrst using LiteRed . There are multiple examples shipped with the
+LiteRed package, but in the contextity of FIREit is convenient to do with
+FIREPath = <path to the folder with FIRE>;
+SetDirectory[FIREPath <> "extra/LiteRed/Setup/"];
+Get["LiteRed.m"];
+SetDim[d];
+Declare[{l, r, p, q}, Vector];
+p·p = 0; q ·q = 0; p ·q = -1/2;
+NewBasis[v2, {-sp[l - r], -sp[l], -sp[r], -sp[p - l], -sp[q -
+r], -sp[p - l + r], -sp[q - r + l]}, {l, r},
+Directory -> FIREPath <> "temp/v2.dir"];
+GenerateIBP[v2];
+AnalyzeSectors[v2, {0, __}];
+FindSymmetries[v2,EMs->True];
+SolvejSector /@ UniqueSectors[v2];
+DiskSave[v2];
+Quit[];
+Here a two-loop non-planar massless vertex ﬁgure is conside red. There is
+a diﬀerent syntax in LiteRed when compared with FIRE.SetDim[d] chooses
+das dimension of space-time; Declare[{l, r, p, q}, Vector] deﬁnes the
+13
+listed variables as momenta; the centered dot stands for the scalar product
+and is equivalent to sp(in case of one argument spis treated as the scalar
+square).NewBasis creates a new LiteRed bases has the following arguments:
+a label for the current family of Feynman integrals, a list of propagators, a
+list of loop momenta and some options such as directory choic e.
+However, it is possible to translate one input into another. The code
+above is equivalent (both can be used but the second variant a llows one to
+provide input only in the style of FIRE) to
+FIREPath = <path to the folder with FIRE>;
+SetDirectory[FIREPath <> "extra/LiteRed/Setup/"];
+Get["LiteRed.m"];
+Get[FIREPath <> "FIRE5.m"];
+Internal = {l, r};
+External = {p, q};
+Propagators = (-Power[ ##, 2]) & /@ {l - r, l, r, p - l,
+q - r, p - l + r, q - r + l};
+CreateNewBasis[v2, Directory -> FIREPath <> "temp/v2.dir "];
+GenerateIBP[v2];
+AnalyzeSectors[v2, {0, __}];
+FindSymmetries[v2,EMs->True];
+SolvejSector /@ UniqueSectors[v2];
+DiskSave[v2];
+Quit[];
+Note:CreateNewBasis is a not a command of LiteRed , it is a command
+inFIREthat translates FIREinput into LiteRed input.
+TheAnalyzeSectors command ﬁnds trivial sectors, the FindSymmetries
+ﬁnds symmetric sectors, SolvejSector builds reduction rules in sectors.
+SolvejSector might take too long or even fail to complete in complex sit-
+uations, but even the usage of AnalyzeSectors andFindSymmetries can
+speed up the reduction signiﬁcantly.
+As a result one gets a folder with many ﬁles containing inform ation on
+the diagram. Now one is ready to load those rules into the Mathematica
+FIRE. Suppose a start ﬁle already exists (this example among othe rs can be
+found in the examples folder). Then one can do the following:
+FIREPath = <path to the folder with FIRE>;
+Get[FIREPath <> "FIRE5.m"];
+LoadStart[FIREPath <> "examples/v2", 2];
+LoadLRules[FIREPath <> "temp/v2.dir", 2];
+14
+Burn[];
+TheLoadLRules command reads the directory with LiteRed rules and
+loads everything it can use out of there. Then the reduction c an be performes
+as before: F[2, {-1, 1, 1, 1, 1, 1, 1}] .
+4.7. Using LiteRed rules inC++
+As mentioned before, the C++reduction is much faster than the Mathema-
+ticaone. However the ﬁles created by LiteRed are in such a format, that
+they cannot be used directly in the C++version and hence a convertion is
+necessary:
+FIREPath = <path to the folder with FIRE>;
+Get[FIREPath <> "FIRE5.m"];
+LoadStart[FIREPath <> "examples/v2"];
+TransformRules[FIREPath <> "temp/v2.dir", FIREPath <>
+"examples/v2.lbases", 2];
+SaveSBases[FIREPath <> "examples/v2"];
+The start ﬁle is loaded without a diagram number here. As a res ult of
+theTransformRules the ﬁles in the "temp/v2.dir" folder are transformed
+and saved in "v2.lbases" ﬁle. The number 2corresponds to the current
+family of Feynman integrals, it is stored inside the lbases ﬁ le and should be
+also used when the ﬁle is being loaded later. The SaveSBases command
+saves information similar to the start ﬁle in "v2.sbases" . It is important
+to use the sbases ﬁle afterwards instead of the start ﬁle sinc e it stores some
+orderings that were used by LiteRed and so should be used by FIREas well.
+Afterwards a conﬁguration ﬁle for the C++reduction might look like:
+#threads 4
+#variables d
+#start
+#folder examples/
+#problem 2 v2.sbases
+#lbases v2.lbases
+#integrals v2.m
+#output v2.tables
+In this case the reduction works much faster than the one with outLiteRed
+rules.
+15
+4.8.C++ FIRE and databases
+To run an eﬃcient reduction it is important to understand how theC++
+FIRE works with databases. It uses the kyotocabinet database engine to
+store them either in RAM or on disk. There is a database for eac h sector
+(storing relations) and one more “common” database (enumer ating integrals).
+If working in the “RAM mode”, FIREkeeps the common database and a
+number of sector databases (maximally equal to the number of threads) in
+RAM. When the forward reduction in a sector is over, the datab ase snapshot
+is saved to disk. It is be loaded back to RAM later at the substi tutions stage.
+If working in the “disk mode”, all the databases are ﬁles on th e disk.
+The disk access is much slower, however if one is using a local disk, then
+normally the operating system eﬃciently caches those ﬁles w ith the use of
+RAM. When FIRE ﬁnishes reduction in a sector, it explicitly instructs the
+operating system to stop caching that particular ﬁle, hence the cache is spent
+only for databases that are currently needed.
+It is hard to say which option is preferable, this depends on t he conﬁgu-
+ration of the current computer in use.
+There is also one more option that should be explained — the si ze of
+the bucket array. The bucket array is some sort of index used b y database
+engines. The bigger this index is, the more eﬃcient the datab ase is, however
+the more RAM is needed to store the bucket array. The bucket option is
+treated exponentially — for example, the default value 20corresponds to
+about one million of entries in the bucket array.
+For the hash database stored on disk (the sector databases ar e of this
+type) it is recommended that the number of entries in the data base should
+not be greater than 4times the number of entries in the bucket array. The tree
+database (the “common database” is of this type) and the RAM d atabases
+have lighter restrictions.
+The footprint of each record is 10bytes. For example, if one is using the
+“disk mode” and a bucket value of 27and is running 8threads at the same
+time, then one needs about 2.5GB for the bucket array.
+5. Additional options
+5.1. Options in Mathematica
+FIREhas some options that can be used in Mathematica .
+16
+•DatabaseUsage — a number from 0to4, by default equal to 0. If it is
+diﬀerent from 0,FIREstores some information in a database. Hence in
+order for it to work, one needs working binaries. By default i t uses the
+QLinkPath = bin/KLink binary for data access and stores data in the
+tempfolder (all paths are considered relative to the value of FIREPath .
+If these ﬁles are on a network drive, it might make sense to pro vide
+anotherDataPath ;
+•MemoryLimit (in megabytes) — an alternative to DatabaseUsage that
+makesFIREincrease the database usage (even if the initial value is 0)
+upon reaching the memory limit;
+•UsingFermat — a boolean option, False by default. If set to True,
+makesFIRE use the external fermat program for algebraic simpliﬁ-
+cations. Since FIREcomes now shipped with fermat , there is proba-
+bly no need to edit the FermatPath = extra/ferl64/fer64 and the
+FLinkPath = bin/KLink for the intermediate binary.
+•FactorCoefficients — a boolean option, Trueby default. If set to
+False ,FIRE won’t apply Factor to coeﬃcients when producing the
+ﬁnal output;
+5.2. Conﬁg ﬁles for C++
+Let us explain in details the syntax of the conﬁguration ﬁles (note: the
+order of some of the commands is important, so to be safe it is r ecommended
+to keep the order as listed in this section).
+•#fermat (optional) — the path to the fermat binary. By default the
+binary shipped with FIREis used, but one might wish to change it, for
+example if Mac OS X is used;
+•#threads — the number of threads launched for parallel reducing in
+sectors of same level;
+•#fthread (optional) — the number of fermat processes launched. By
+default it is equal to the number of threads, but it might make sense
+to increase it;
+•#variables — comma-separated list of variables used during the re-
+duction;
+17
+•#database (optional) — path to the place where FIREwill store the
+data; by default it points to the tempdirectory relative to the current
+folder, but this can be changed; it is especially important t o be sure
+that this setting does not point to a network drive in case you do not
+use thememory setting;
+•#bucket (optional) — an integer number equal to 20by default and re-
+lated to the database engine; small values will make FIREauto-increase
+the bucket during the reduction, and this can slow things dow n, large
+values can make FIREuse too much RAM; for complicated tasks con-
+sider a bucket value equal to 27–30;
+•#memory (optional) — if this line exists, FIRE will use “disk mode”
+instead of “RAM mode” — it will store active databases in RAM; this
+setting makes FIREuse more RAM, but it becomes less vulnerably to
+freezing because of network drives;
+•#start — just a command following the previous lines;
+•#folder (optional) — if this path is given, all following paths will b e
+considered relative to this folder unless they are absolute paths (starting
+with/);
+•#problem — the instruction to load a start or sbases ﬁle; the syntax is
+#problem pn path or#problem pn |maxpos|path or#problem pn
+|minpos,maxpos|path ;pnhere is the diagram number; if maxpos is
+provided, then indices bigger than maxpos cannot be positive; if minpos
+is provided, then indices smaller than minpos cannot be positive;
+•#rules (optional) — a command to load a ﬁle with rules for some
+integrals;
+•#lbases (optional) — a command to load with LiteRed rules obtained
+byTransformRules ;
+•#output or#masters — the path where FIREwill store the resulting
+tables; if one chooses the #masters syntax, then FIRE only aims at
+ﬁnding master integrals, and this can be much faster than the whole
+reduction; this might be needed to ﬁnd master integrals, the n one can
+useWriteRules to ﬁnd equivalents between them, so that afterwards
+the full reduction can be run with the use of those rules;
+18
+•#preferred (optional) — this ﬁle can list integrals that will be pre-
+ferred as master-integrals; this might be needed if you do no t like the
+automatic choice; however, keep in mind that it is just a hint forFIRE;
+•#integrals — the ﬁle with integrals to be reduced.
+The package contains a number of examples, that are describe d in the
+README ﬁle.
+6. Optimization hints
+Here are some hints on how to optimize FIREperformance:
+•Reduction should be performed by the C++version of FIRE, it is signif-
+icantly faster; even a sample integral in the doubebox examp le in this
+paper gave us a speedup by a factor of 20, and the more complicated
+the reduction is, the more signiﬁcant this speedup is;
+•Pay attention to the correct input. One should either list bo undary
+conditions manually, or rely on AutoDetectRestrictions->True , or
+useLiteRed (at least the AnalyzeSectors part); missing boundary
+conditions might reduce speed a lot;
+•It is recommended to use LiteRed , at least to reveal the symmetries
+with the FindSymmetries command, however the SolvejSector can
+decrease performance sometimes;
+•Even after that one can have redundant master integrals; if t he substi-
+tution stage runs too long, it makes sense to run the partial r eduction
+only to reveal master integrals, ﬁnd equivalents between th em with the
+WriteRules command and use them for the ﬁnal reduction; some extra
+rules can be inserted manually;
+•FIREnormally prefers master integrals with denominators, but t he com-
+mandWriteRules can ﬁnd equivalents only for integrals without de-
+nominators, so to have them as masters (in cases when there ar e many
+masters in a single sector), one can use the preferred option;
+•Use parallelization via the threads andfthreads settings. Raise
+threads as high as the number of kernels on your machine, but if
+that results in high RAM usage, threads should be set to a smaller
+value but fthreads can be left higher;
+19
+•It is highly recommended to have dbpoint at a directory located at
+a fast local hard disk or even an SSD (and for complicated case s one
+might need a TB of space or more), that is cached properly by me ans
+of the operating system; If it is not the case, the only option is to use
+thememory option, however this results in greater RAM usage;
+•Have enough RAM; swapping will most probably make reduction fail,
+but even if the RAM usage is far from the limit in the “disk mode ”, it
+is normally used for the cache (automatically, by means of th e operat-
+ing system), so a good amount of free RAM speeds the process a l ot
+(without the memory setting);
+•Try to play with the bucket setting — a value from 27to30is advised
+for complicated settings; a higher value speeds up the datab ases but
+gets the problem require more RAM (just for the “bucket array ”);
+•If theMathematica FIRE takes too long to produce results loaded from
+tables, set FactorCoefficients=False .
+There are some more suggestions on what can be done if somethi ng is
+working to slow:
+•IfPrepare is working slow, then probably too many RESTRICTIONS
+have been set for individual sectors. Try to use boundary con ditions for
+sets of sectors or rely on AutoDetectRestrictions->True orLiteRed
+in detecting them; also the Parallel->True option speeds up this pro-
+cedure (use a number instead of Trueto specify the number of cores);
+•For tt EvaluateAndSave is working slow, then one should move t o the
+C++reduction;
+•Burn[] is working slow, then one can run it once and save results with
+SaveData[filename] , then it can be loaded with LoadData[filename]
+afterwards;
+•The substitution stage of the C++reduction (sectors counted upwards)
+is working too slow. It probably means that one has too many eq uiva-
+lent master integrals; equivalents should be revealed by LiteRed or the
+FindRules command after the run to detect irreducible integrals;
+20

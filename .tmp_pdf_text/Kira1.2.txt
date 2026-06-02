@@ -1,0 +1,669 @@
+arXiv:1812.01491v1  [hep-ph]  4 Dec 2018FR-PHENO-2018-15
+TCDMATH 18-18
+Kira 1.2 Release Notes
+Philipp Maierhöfer∗,aand Johann Usovitsch†,b
+aPhysikalisches Institut, Albert-Ludwigs-Universität Fr eiburg,
+79104 Freiburg, Germany
+bTrinity College Dublin, School of Mathematics, Dublin 2, Ir eland
+Abstract
+We present the Feynman integral reduction program Kira 1.2 and
+describe its new features and other changes w.r.t. the previ ous ver-
+sions. The main new features include a much faster equation g enera-
+tor, more ﬂexible seed speciﬁcation options, several prede ﬁned integral
+orderings, the reduction of systems of user-provided equat ions and a
+new technique to simplify coeﬃcients by sampling variables over in-
+tegers. Furthermore, we provide a collection of recommenda tions on
+how to use the program eﬃciently. This version has overall im prove-
+ments in runtime for all reduction tasks compared to the prev ious
+versions of Kira .
+∗E-mail: philipp.maierhoefer@physik.uni-freiburg.de
+†E-mail: usovitsj@maths.tcd.ie
+1
+1 Introduction
+Kira, ﬁrst introduced in [1], is an implementation of the Laporta algorithm [2]
+to reduce Feynman integrals to a basis of master integrals. I n this approach,
+large systems of relations between Feynman integrals, name ly integration-by-
+parts [3] and Lorentz invariance [4] identities, and symmet ry relations, are
+generated and solved by Gaussian elimination. A complexity criterion deﬁnes
+an ordering on the Feynman integrals, so that more complicat ed integrals are
+systematically expressed in terms of simpler integrals. La porta’s algorithm
+has become a standard method for the integral reduction task in calculations
+of multi-loop scattering amplitudes e.g. for the Large Hadr on Collider, and
+constitutes one of the bottlenecks in such calculations. Th ough alternative
+reduction techniques have been proposed and applied to spec iﬁc problems,
+see e.g. [5–8], to date programs based on Laporta’s algorith m [9–11] pose the
+only general purpose tools suited for large scale applicati ons. The continuous
+improvement of these tools is thus essential to keep up with t he increasing
+demands in the applications.
+InKira, the solver for systems of linear equations is assisted by mo du-
+lar arithmetic to remove redundant equations from the syste m and to select
+subsystems of equations in order to reduce speciﬁc selected integrals. The em-
+ployed forward elimination tries to minimise the number of e limination steps,
+and the simpliﬁcation of coeﬃcients is optimised e.g. by rec ursive pairwise
+combinations of coeﬃcients. The details of the algorithms u sed are described
+in [1].
+In section 2 of this article we describe how to obtain Kira and how to
+compile and install it on your system. Section 3 explains new features, ﬁxes
+and changed default behaviour in Kira 1.2 . In section 4 we provide a col-
+lection of tips on how to use Kira eﬃciently. Appendices A and B provide
+further help regarding the installation of Kira and its dependencies.
+Note that this is not a complete user manual. In particular, f or the
+conventions used in the topology and kinematics deﬁnition, please refer to
+the original Kira publication [1]. Even though no systematic introduction on
+the structure of job ﬁles is provided in these release notes, together with the
+examples that are shipped with the source code, they should c ontain enough
+information to cover the majority of use cases.
+2
+2 Installation
+Kira can either be built using the Autotools build system or the Meson build
+system [12]. We recommend Meson if a suﬃciently recent version is available
+on your system.
+2.1 Prerequisites
+Platform requirements
+Linux x86_64 or Mac OS X.
+Compiler requirements
+AC++compiler supporting the C++14 standard and a Ccompiler supporting
+theC11standard, e.g. gccversion 5.1 or later, or LLVM version 3.4 or later.
+Dependencies
+Kira requires the following packages to be installed on the syste m:
+•GiNaC [13,14] (which itself requires CLN[15]),
+•yaml-cpp [16],
+•zlib [17].
+In addition, the program Fermat [18] is required to run Kira. If the Fermat
+executable is not found automatically by Kira or a speciﬁc Fermat installa-
+tion should be used, the path to the Fermat executable can be provided by
+setting the environment variable FERMATPATH=/path/to/fer64 .
+Please note that GiNaC ,CLNandyaml-cpp must have been compiled with
+the same compiler which is used to compile Kira. Otherwise the linking step
+will most likely fail. If you are using the system compiler, y ou can usually
+install these packages via your system’s package manager. H owever, if you
+are using a diﬀerent compiler, this means in practice that yo u also have to
+build these packages from source and set the environment var iables C_PATH ,
+LD_LIBRARY_PATH andPKG_CONFIG_PATH according to the installation preﬁx.
+See appendix B for more details.
+2.2 Obtaining Kira
+The latest version of Kira is available from our Gitrepository at GitLab un-
+der the URL https://gitlab.com/kira-pyred/kira . To obtain the source
+code of the latest release version, clone the repository wit h
+git clone https://gitlab.com/kira-pyred/kira.git -b rel ease
+3
+checking out the release branch. Release versions are also a vailable as Git
+tags (starting with Kira 1.2 ). The master branch of the repository contains
+the latest pre-release version, receiving more frequent up dates with new fea-
+tures and ﬁxes. To obtain the source code of the latest pre-re lease version,
+clone the repository with
+git clone https://gitlab.com/kira-pyred/kira.git
+checking out the master branch. Please refer to the changelo g for information
+about what changed w.r.t. the release. Packages of the relea se versions as
+compressed Tararchives are available from
+https://www.physik.hu-berlin.de/de/pep/tools .
+2.3 Compiling Kira with the Autotools build system
+If you obtained Kira from the Gitrepository, you ﬁrst need to run
+autoreconf -i
+Then compile and install with
+./configure --prefix=/install/path
+make
+make install
+where the optional --prefix argument sets the installation preﬁx.
+2.4 Compiling Kira with the Meson build system
+Since Kira 1.2 one may optionally use the Meson build system instead of
+Autotools to build Kira.
+meson --prefix=/install/path builddir
+cd builddir
+ninja
+ninja install
+where builddir is the build directory. Specifying the installation preﬁx
+with --prefix is optional. Meson version 0.46 or later is recommended1. See
+appendix A for more information about how to obtain a current version of
+Meson .
+1Some older versions may work as well, but this has not been tes ted.
+4
+3 Changes and new features in Kira 1.2
+3.1 Build system
+•A new build system based on Meson has been introduced.
+•The dependency on OpenMP has been removed. Instead, Kira now uses
+threads directly.
+•Support for Mac OS X has been improved. Kira now compiles with
+Apple’s version of LLVM (which lacks OpenMP support).
+3.2 New equation generator
+The generator for integration-by-parts, Lorentz invarian ce and symmetry
+equations has been rewritten. The performance of the equati on generator
+has been improved by typically three orders of magnitude.
+3.3 Changed default options
+•The option data_file: false in the job ﬁle is now default, i.e. the
+reduction rules are no more written to plain text ﬁles. This r educes
+disk usage by approximately a factor 2. The old behaviour can be
+restored by setting data_file: true .
+•The option conditional: true in the job ﬁle is now default. With this
+option (introduced in Kira 1.1 ), aborted reductions are automatically
+resumed when the job is restarted.
+•The command line option --algebra has been removed. This option
+was used to choose between two diﬀerent algorithms to simpli fy a sum
+of terms. The choice is now made automatically for every simp liﬁcation
+based on the number of terms in the sum and the size of the terms .
+3.4 New seed notation
+A more ﬂexible notation for seeds has been introduced.
+jobs:
+- reduce_sectors:
+reduce:
+- {topologies: [T1,...], sectors: [S1,...],
+r: rmax, s: smax, d: dmax}
+- {...} # can be used multiple times
+5
+•rmax: the maximal sum of positive propagator powers in the seed.
+•smax: the maximal negative sum of negative propagator powers in t he
+seed.
+•dmax (optional): the maximal number of dots. On a sector with L
+lines ( Lis the number of propagators with positive integer exponent s),
+seeds will be generated up to r= min( rmax, L+dmax). If omitted, only
+rmax will limit r. This option should usually only be used in integral
+selectors, but not in IBP seeds.
+•topologies (optional): T1is the name of a topology. Several topologies
+may be selected. If omitted, all topologies deﬁned in the pro ject will
+be selected.
+•sectors (optional): S1is a sector number. Several sectors may be se-
+lected. If omitted, the sectors speciﬁed as top_level_sectors in the
+topology deﬁnition in integralfamilies.yaml will be used (individ-
+ually for each topology).
+The same notation can be used in select_mandatory_recursively and the
+export options kira2form andkira2math .
+N.B.: The old seed notation may still be used. However, we recommen d using
+the new notation. See the section about best practices for th e advantages of
+the new notation.
+3.5 Integral ordering
+The integral ordering can now be chosen by the user from eight predeﬁned
+orderings. The ordering can either be chosen on the command l ine with
+the option --integral_ordering=<value> or in the job ﬁle with the option
+integral_ordering: <value> .
+Seeexamples/topo4/advanced_jobs_reduction.yaml for an example.
+Previous versions of Kira used ordering 1 exclusively, which is still the de-
+fault.
+Integral orderings
+1. (default) Scalar products are regarded as simpler as dots . If there
+is more than one master integral in a sector, this produces a b asis
+with irreducible scalar products (negative indices) and no increased
+propagator powers (positive indices greater than 1). If mas ter integrals
+with increased propagator powers appear this usually indic ates that
+the number of scalar products in the seed was chosen too small .
+6
+2. Dots are regarded as simpler than scalar products. This pr oduces a
+basis with only positive indices. If master integrals with i rreducible
+scalar products appear this usually indicates that the valu e ofrmax in
+the seed was chosen too small.
+3. The ﬁrst complexity criterion is the sum of dots and scalar products.
+If the sum is equal, scalar products are regarded as simpler.
+4. Like 3., but if the sum is equal, dots are regarded as simple r.
+Furthermore, in orderings 1–4, sectors are ordered w.r.t. t he sector number.
+Orderings 5–8 are the same as 1–4, but with sectors ordered by the number
+of lines ﬁrst. Furthermore, in orderings 5–8, subsectors of the deﬁned top-
+level sectors are always regarded as simpler than sectors ou tside the top-level
+sectors with the same number of lines. This prevents a possib le issue which
+is described in section 3.13.
+Note that changing the integral ordering may aﬀect the runti me signiﬁ-
+cantly in either direction, depending on the topology and it s exact parametri-
+sation. We recommend to investigate the behavior in a test ru n.
+3.6 Basis change
+The feature preferred_masters (introduced in Kira 1.1 ) to provide a list
+of integrals which should be preferred as master integrals h as been improved
+and bugs have been ﬁxed:
+•Eliminating redundant integrals from the list of preferred master inte-
+grals now works.
+•In some cases, the mapping of integrals was done incorrectly and an
+integral with all indices zero appeared as a master integral .
+Note that a posteriori basis changes are not supported, i.e. preferred masters
+must be given before the reduction is performed.
+N.B.: The option select_masters is an alias of preferred_masters .
+3.7 Topology initialisation
+In the ﬁrst run, all topologies which are deﬁned in integralfamilies.yaml
+will be initialised. I.e. trivial sectors, symmetries and m appings will be de-
+termined for all topologies in the order in which they are deﬁ ned. If an
+individual topology is reduced, master integrals will now b e mapped to pre-
+vious topologies, even if they are not reduced in the same run .
+7
+In previous Kira versions, only topologies selected in the job ﬁle were
+initialised (in the order they were given in the job ﬁle). Thi s lead to an error
+if, in a subsequent run, a topology was added to the job ﬁle. Fu rthermore,
+the mapping to previous topologies was only done when the top ologies were
+reduced together.
+3.8 Improved symmetry detection
+•The detection of symmetries due to the permutation of extern al mo-
+menta now takes into account sign ﬂips of the momenta. Only sy mme-
+tries that leave the invariants unchanged are considered.
+•Previous versions of Kira discarded certain symmetries if they were ex-
+pected to be redundant. This has been disabled, because in so me cases
+symmetries which are not redundant were dropped. Now all sym me-
+tries are always taken into account.
+•In certain cases, Kira 1.1 tried to use symmetries which do not per-
+mute the propagators but shift their masses. While the symme tries are
+in principle valid, they are not handled correctly. Since th ese symme-
+tries are unwanted in a reduction, they have been disabled.
+3.9 Export of reduction rules to Mathematica or Form
+InKira 1.1 , reduction rules for integrals in trivial sectors were miss ing in
+the exported ﬁle. This has been ﬁxed.
+3.10 Sectorwise forward elimination
+For large systems it may be helpful to perform the forward eli mination
+sectorwise. To activate this, set run_triangular: sectorwise (instead of
+run_triangular: true ) in your job ﬁle. If run_triangular: sectorwise
+is set and a run is aborted before the triangular form is achie ved,Kira will
+resume the forward elimination when the job is restarted.
+3.11 Algebraic reconstruction
+In reduction problems where the coeﬃcients contain at least two variables,
+the new option algebraic_reconstruction: true can be used to enable
+the algebraic reconstruction of coeﬃcients sampled over in tegers [7, 19, 20].
+The algorithm is only applied during the back substitution.
+8
+If the option algebraic_reconstruction: true is set Kira will decide
+to which coeﬃcients the algorithm will be applied based on th e number of
+terms in the expression and the size of the expressions.
+For an example see examples/topo4/advanced_jobs_reduction.yaml .
+3.12 Solving user-deﬁned systems of equations
+One of the most requested features by Kira users is the possibility to use the
+equation solver on externally provided equations2. InKira 1.2 an interface
+is provided to solve systems of user-provided linear equati ons. The option
+reduce_user_defined_system comes in two ﬂavours:
+•Import the user-deﬁned system of equations without prepari ng the con-
+ﬁg ﬁles integralfamilies.yaml andkinematics.yaml . The system
+will be sorted according to Kira’s equation ordering and then be solved.
+Topologies will be automatically deﬁned with the names used in the
+equation ﬁle in the order of their appearance. For integrals with more
+than one integer index, the orderings deﬁned in section 3.5 c an be used.
+•Prepare the conﬁg ﬁles in the config folder in the same way as you
+would in an ordinary integration-by-parts reduction. Base d on the
+deﬁnitions in the conﬁg ﬁles, trivial integrals will be set t o zero in the
+imported system. The system will be sorted and then solved.
+Options like select_integrals ,preferred_masters and those to control
+the individual reduction steps apply as usual.
+In cases where the objects in the equations are not integer-i ndexed Feyn-
+man integrals or where a diﬀerent ordering is desired than Kira’s build-in
+integral orderings, single-indexed objects may be used, e. g.T[n], where nis
+a 32-bit signed integer. In the default ordering, T[0] will be regarded as the
+simplest object, followed by descending negative indices. Positive indices are
+regarded as more complex than any negative index with increa sed complexity
+for ascending values. This way, 232distinguishable objects may be deﬁned
+per “topology” .
+Some examples can be found in examples/userDefinedSystem1 and
+examples/userDefinedSystem2 .
+Possible applications include but are not limited to integr als appearing
+in amplitudes that do not have the standard form of Feynman in tegrals, or
+coeﬃcients in the expansion of Feynman integrals in some par ameter.
+2Employing some undocumented tricks this has always been pos sible and in fact been
+done by several users, e.g. in [21].
+9
+3.13 Finding “magic relations”
+Some relations between Feynman integrals are only found whe n sectors with
+more lines than the integrals themselves are taken into acco unt. In some
+cases, those higher sectors may not appear in the physical pr oblem at hand.
+A straight-forward way to ﬁnd these relations is, of course, to include those
+higher sectors in the reduction (possibly with a lower seed) and excluding
+them in the integral selection.
+However, if the option top_level_sectors is used in the topology deﬁ-
+nition, the symmetrisation of higher sectors will be skippe d. The new option
+magic_relations: true in the topology deﬁnition forces Kira to include
+symmetries of sectors which are not subsectors of the top-le vel sectors in a
+way that the sectors are preferably mapped onto the top-leve l sectors. From
+experience it is suﬃcient to symmetrise only sectors with up to the same
+number of lines as the top-level sectors.
+An example is provided in examples/topbox where the number of master
+integrals in sector 93 is reduced from 5 to 4 when sector 127 is included in
+the seed and the option magic_relations: true is set.
+Note that when top-level sectors are embedded into a topolog y which do
+not have a sector number expressible as 2n−1 with integer n, it may happen
+that such “magic relations” reduce a selected integral to in tegrals which lie
+outside of the top-level sectors. In such cases, the number o f master integrals
+may increase, because these additional sectors will then be reduced as well.
+This can be prevented by using a diﬀerent sector ordering whi ch regards
+top-level sectors and their subsectors as simpler than all o ther sectors. The
+integral orderings 5–9 as described in section 3.5 exhibit t his property and
+may therefore resolve the issue.
+3.14 Merging of database ﬁles
+Kira now provides the job ﬁle option merge to merge several reduction
+databases into a single database ﬁle.
+If a reduction was done independently to diﬀerent subsets of master in-
+tegrals with the option select_masters_reduction , this can be used to
+merge the database ﬁles with the complementary parts of the r eduction
+into one database with the complete reduction. For an exampl e see sec-
+tion 4.5 and the example examples/topo7_parallel . In this example, we
+perform the reduction to the ﬁrst half of the master integral s in the project
+directory examples/topo7_parallel and to the second half in the direc-
+tory examples/topo7_parallel2 . Then we can merge the database from
+topo7_parallel2 into the one from topo7_parallel by running the job ﬁle
+10
+jobs:
+- merge:
+files2merge:
+- ../topo7_parallel2/results/kira.db
+in the directory examples/topo7_parallel . Note that the path to the
+database to merge into is not listed in this ﬁle, but implicit ly taken from
+the project directory from which the merge job is executed. A fterwards,
+the fully reduced integrals can be extracted from the merged database with
+kira2math orkira2form as usual.
+3.15 Cut propagators
+For completeness, we describe the option cut_propagators already intro-
+duced in Kira 1.1 . To declare speciﬁc propagators of a topology as “cut”,
+set the option
+cut_propagators: [n1,n2,n3,...]
+for the topology in integralfamilies.yaml , where [n1,n2,n3,...] is the
+list of the numbers of the cut propagators (propagators are n umbered starting
+with 1). Example:
+integralfamilies:
+- name: "topo7"
+loop_momenta: [k1,k2]
+top_level_sectors: [127]
+propagators:
+- ["-k1", 0] #1
+- ["k2", 0] #2
+- ["-k1+k2", 0] #3
+- ["k1+q2", "m2^2"] #4
+- ["k2-p2", 0] #5
+- ["-k1+p1+p2", 0] #6
+- ["k2-p1-p2", 0] #7
+- ["k1-p2", 0] #8
+- ["k2-q2", 0] #9
+cut_propagators: [3,4]
+Here, the 3rd and 4th propagator will be treated as cut. This m eans that
+during the reduction all integrals in which a cut propagator has non-positive
+power are set to zero.
+11
+4 Best practices
+4.1 Topology deﬁnition
+If a topology has only one top-level sector, order the propag ators such that
+the sector number is 2n−1 (if the sector has nlines), i.e. the propagators
+at the end of the list appear only as irreducible scalar produ cts. Deﬁne the
+propagators in such a way that
+1. propagators have short linear combinations of loop momen ta and the
+shortest linear combinations appear earlier in the list of p ropagators,
+2. analogously, keep linear combinations of external momen ta short with
+ascending length,
+3. massless propagators appear earlier in the list.
+Always deﬁne top_level_sectors for the topologies. This will ensure that
+sectors are only mapped on subsectors of the deﬁned top-leve l sectors. Also,
+these are the sectors which are automatically selected when omitted in the
+seed speciﬁcation (see section 3.4). Sectors which are not s ubsectors of the
+deﬁned top-level sectors will not be symmetrised or mapped. This reduces the
+amount of time spent on symmetry detection. Note that if you a re trying to
+ﬁnd relations by reducing sectors which are higher than thos e in the physical
+problem, the higher sectors must be included in the top-leve l sectors in order
+to symmetrise them. See also “magic relations” in section 3. 13.
+These are only rough guidelines based on experience. Findin g the optimal
+topology representation is a non-trivial task and we do not k now a general
+prescription. If you are dealing with a level of complexity w here the topology
+representation may be crucial to complete the reduction suc cessfully on the
+available hardware, try diﬀerent representations and run s maller jobs (i.e.
+with smaller seeds) and measure the eﬀect.
+4.2 Integral selection
+Always use the options to select the integrals that should be reduced:
+select_mandatory_list and/or select_mandatory_recursively (see e.g.
+examples/topo7/jobs2.yaml ).
+Recommendation:
+Provide a list of all integrals needed for the amplitude and ( if applicable) the
+diﬀerential equations and pass it to select_mandatory_list . If you intend
+12
+to (manually) perform a transformation of the integral basi s after the reduc-
+tion, use the option select_mandatory_recursively to select integrals up
+to a certain number of dots and scalar products that you expec t to suﬃce
+for the transformation.
+When mandatory selectors have been deﬁned, Kira prints the list of mas-
+ter integrals after the selection has been performed and bef ore starting the
+forward elimination. This step is much faster than the full r eduction, i.e.
+one can obtain the list of master integrals in a quick run. It i s possible to
+interrupt the reduction after printing the master integral s by setting the op-
+tion run_initiate: true in the job ﬁle and (if present) run_triangular
+andrun_back_substitution tofalse in order to stop.
+In time-consuming reductions, we recommend to always check that this
+list of master integrals looks sensible before running the f ull reduction, e.g.
+that it does not contain unexpected integrals like integral s that lie on the
+seed edge although there are no masters in the same sector wit h one dot or
+one scalar product less.
+The reported list of master integrals at this stage contains all integrals
+which appear in the reduction formulas of mandatory selecte d integrals and
+the selected integrals themselves if there was no reduction formula found. Of
+course, these master integrals can be used to determine inte grals which enter
+the diﬀerential equations for the master integrals before d oing the actual
+reduction.
+Optional selectors as described in [1] are not available in Kira 1.2 . They
+may be reintroduced in a later release.
+4.3 Advanced seed selection
+With the new seed selector described in section 3.4, one may g enerate and
+select a system of equations where the subsectors may have mo re dots or
+scalar products than the higher sectors (with more lines).
+Seeexample/topo7/jobs2.yaml :
+jobs:
+- reduce_sectors:
+reduce:
+- {topologies: [topo7], sectors: [127], r: 7, s: 2}
+- {topologies: [topo7], sectors: [63], r: 8, s: 3}
+select_integrals:
+select_mandatory_recursively:
+- {topologies: [topo7], sectors: [127], r: 7, s: 2, d: 0}
+- {topologies: [topo7], sectors: [63], r: 8, s: 3, d: 2}
+13
+Here we demonstrate that we can generate a system of equation s for the
+sector 63 with up to r=8and 3 scalar products while the higher sector 127 is
+reduced up to r=0and 2 scalar products. Such a reduction is impossible with
+the old seed selector notation. Also the job ﬁles are shorter and topologies
+and sectors are chosen automatically according to the topol ogy deﬁnition.
+Seeexample/topo7/jobs1.yaml :
+jobs:
+- reduce_sectors:
+reduce:
+- {r: 7, s: 2}
+where topo7 is implicitly chosen with sector 127 and topo7x with sector
+508 as deﬁned in the topology deﬁnition with top_level_sectors set. An
+equivalent job ﬁle with the old seed notation looks like this :
+jobs:
+- reduce_sectors:
+sector_selection:
+select_recursively:
+- [topo7,127]
+- [topo7x,508]
+identities:
+ibp:
+- {r: [t,7], s: [0,2]}
+4.4 Resuming aborted reduction jobs
+In the following stages of the reduction Kira automatically creates check-
+points from which an aborted calculation can be resumed:
+•After the search for the symmetries and trivial sectors of ev ery topology.
+•After generating the system of equations and selecting a sub system of
+linearly independent equations.
+•After the forward elimination, i.e. when the system is in tri angular
+form. In case the option run_triangular: sectorwise has been set,
+the state will be saved after every completed sector. Usuall y, the for-
+ward elimination is quite fast. If checkpointing is require d anyway,
+run_triangular: sectorwise must be set.
+14
+•During the back substitution, intermediate results will be committed
+to the database regularly.
+When an aborted job is restarted, it will automatically cont inue from the
+last checkpoint if the option conditional: true is set. This is the default
+unless the option select_masters_reduction is used (see section 4.5 for
+details). Symmetries and trivial sectors will always be reu sed, independent
+ofconditional .
+With the following options, diﬀerent reduction steps may be started in-
+dividually:
+•run_symmetries: true/false ,
+•run_initiate: true/false ,
+•run_triangular: true/false/sectorwise ,
+•run_back_substitution: true/false .
+Note that the bulk of the CPU time usually goes into the back su bstitution.
+However, there is currently no option to terminate a job grac efully after a
+speciﬁed amount of time. Instead the job may just be terminat ed by the
+means of the operating system (e.g. by a batch system with a ti me limit per
+job).
+4.5 Individual reductions to selected master integrals
+Since Kira 1.1 it is possible to split the back substitution into several re duc-
+tion jobs where each job calculates the coeﬃcients of a given subset of master
+integrals only, eﬀectively setting all other master integr als to zero. The full
+reduction is then obtained by merging the results from the in dividual reduc-
+tions (i.e. summing the right-hand sides of the reduction fo rmulas for each
+reduced integral). Similar approaches have been described in [20,22]. There
+are two scenarios in which this technique is useful.
+•Reduce the memory consumption during the back substitution by cal-
+culating coeﬃcients for diﬀerent master integrals sequent ially in a single
+run. In order to use this feature, create an entry of the follo wing form
+in your job ﬁle:
+select_integrals:
+select_masters_reduction:
+- [topo7, [1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31 ]]
+- [topo7, [2,4,6,8,10,12,14,16,18,20,22,24,26,28,30]]
+15
+In this example, we have 31 master integrals for the example t opology
+topo7 and the reduction will be performed in two sequential steps,
+ﬁrst to the master integrals with odd numbers, then to those w ith
+even numbers. The merging into complete reduction formulas will be
+done automatically in this case. Note that in this mode resum ing a
+reduction job with conditional: true is not possible. If resuming is
+forced nevertheless, it will most likely produce wrong resu lts.
+•Parallelise the reduction across diﬀerent machines by lett ing each ma-
+chine handle the coeﬃcients of a subset of the master integra ls. In order
+to do this, some manual work is required. We recommend to run t he
+forward elimination (option run_triangular: true orsectorwise )
+on one machine and then create a copy of the working directory for
+each back substitution job. Then run the back substitution j obs on all
+machines in parallel.
+In this mode resuming a reduction is possible (for every back substi-
+tution job individually). Note that if select_masters_reduction is
+used, the option conditional: true must be set explicitly to resume
+a job (checkpoints are created in any case, see section 4.4).
+It lies in the user’s responsibility to make sure that the com bined sets of mas-
+ter integrals listed in select_masters_reduction is complete. This means
+that the list of master integrals must be determined before p erforming the
+back substitution. The fastest way to ﬁnd the master integra ls with Kira
+is to run a job with the option run_initiate: true and perform an in-
+tegral selection with the options select_mandatory_recursively and/or
+select_mandatory_list . The list of master integrals will then be written
+to the ﬁle master in the directory results/TOPO for topology TOPO. The
+numbers of the master integrals in the option select_masters_reduction
+refer to the position in this list (starting with 1).
+An interesting observation is that the runtime to calculate the coeﬃcients
+of diﬀerent master integrals varies strongly. From experie nce, the master
+integrals with the smallest number of lines take longest. Th erefore, when
+the back substitution is parallelised across several machi nes, those integrals
+should be evenly distributed among the jobs. An example to il lustrate the
+usage of the option select_masters_reduction to parallelise the reduc-
+tion across several machines is provided in examples/topo7_parallel . See
+examples/topo7_parallel/readme.txt for details. When the reduction to
+all master integrals is complete, the databases can be merge d as described in
+section 3.14.
+16
+4.6 Command line arguments
+Use--parallel=n where nis at most the number of physical cores (i.e.
+not counting hyperthreading logical cores) to run Kira onnCPU cores in
+parallel.
+InKira 1.2 option the --algebra has been removed. The option is now
+activated automatically where deemed useful as described i n section 3.3.
+4.7 Integral ordering and basis choice
+Before a large run, try diﬀerent integral orderings (e.g. or dering 1 and 2)
+and measure the performance and memory consumption. Note th at diﬀer-
+ent orderings may require diﬀerent seeds. In particular, in orderings which
+produce a “dot basis”, rmax must be chosen large enough so that the seed
+includes the master integrals in each reduced sector.
+Instead or in addition to changing the integral ordering it m ay also
+be useful to choose a diﬀerent basis of master integrals with the option
+preferred_masters . The choice of the basis can strongly impact the run-
+time, because the complexity of the coeﬃcients depends on th e basis.
+Acknowledgments
+We thank Peter Uwer for his continuing support and discussio ns. We thank
+Yang Zhang who inspired the implementation of the algebraic reconstruc-
+tion for his support. We thank Fabian Lange and Mario Prausa f or their
+comments on the manuscript and for testing the new release. T his project
+has received funding from the European Research Council (ER C) under the
+European Union’s Horizon 2020 research and innovation prog ramme under
+grant agreement No 647356 (CutLoops). J.U. acknowledges su pport by
+the “Phenomenology of Elementary Particle Physics beyond t he Standard
+Model” group at Humboldt-Universität zu Berlin for providi ng computing
+resources. P.M. acknowledges support by the state of Baden- Württemberg
+through bwHPC and the German Research Foundation (DFG) thro ugh grant
+no INST 39/963-1 FUGG. Last but not least we would like to than k all users
+who helped improving Kira by sending us their comments, feature requests
+and bug reports.
+17
+A Obtaining Meson and Ninja
+If no suﬃciently recent version of Meson is available from your distribution’s
+package repository, the latest version can be installed sys tem-wide with
+pip3 install meson
+rsp. with
+pip3 install --user meson
+in the user’s home directory. Python 3.5 or later is required. The Ninja
+binary can be downladed from https://ninja-build.org .
+B Specifying a compiler and a non-default in-
+stall location
+If you are using a compiler which is not your system compiler, in general
+you will also need to compile the dependencies with that comp iler. If the
+dependencies are not installed in a default location, the se arch paths must
+be set accordingly.
+Set the compiler you want to use (here: g++-X forC++andgcc-X forC)
+and the installation preﬁx:
+export CXX=g++-X
+export CC=gcc-X
+PREFIX=/install/prefix
+export LD_LIBRARY_PATH=$PREFIX/lib64:\
+$PREFIX/lib:$LD_LIBRARY_PATH
+export CPATH=$PREFIX/include:$CPATH
+export PKG_CONFIG_PATH=$PREFIX/lib64/pkgconfig:\
+$PREFIX/lib/pkgconfig:$PKG_CONFIG_PATH
+To compile CLNwith this compiler and install it to the location speciﬁed by
+$PREFIX , extract the CLNsource package, change into the CLNdirectory and
+run
+./configure --prefix=$PREFIX
+make
+make install
+18
+Extract the GiNaC source package, change into the GiNaC directory and run
+./configure --prefix=$PREFIX
+make
+make install
+Extract the yaml-cpp source package, change into the yaml-cpp directory
+and run
+mkdir build
+cd build
+cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DBUILD_SHARED_L IBS=ON ..
+make
+make install
+Change into the Kira directory and run (of course, autotools may be used
+as well, see section 2.3)
+meson --prefix=$PREFIX builddir
+cd builddir
+ninja
+ninja install
+To run Kira,LD_LIBRARY_PATH must be set, so that the same libraries are
+linked at startup as were linked at compile time. Then run
+$PREFIX/bin/kira
+Optionally, you may set the PATH environment variable so that the full path
+is not required when starting Kira.
+PATH=$PREFIX/bin:$PATH
+kira
+It may be convenient to set and export LD_LIBRARY_PATH andPATH in your
+shell conﬁguration (e.g. ~/.bashrc if you are using Bash).
+19
+References
+[1] P. Maierhöfer, J. Usovitsch and P. Uwer, Kira—A Feynman integral
+reduction program ,Comput. Phys. Commun. 230(2018) 99–112,
+[1705.05610 ].
+[2] S. Laporta, High precision calculation of multiloop Feynman integrals
+by diﬀerence equations ,Int.J.Mod.Phys. A15 (2000) 5087–5159,
+[hep-ph/0102033 ].
+[3] K. G. Chetyrkin and F. V. Tkachov, Integration by Parts: The
+Algorithm to Calculate beta Functions in 4 Loops ,
+Nucl. Phys. B192 (1981) 159–204.
+[4] T. Gehrmann and E. Remiddi, Diﬀerential equations for two loop four
+point functions ,Nucl. Phys. B580 (2000) 485–518, [ hep-ph/9912329 ].
+[5] A. V. Smirnov and V. A. Smirnov, Applying Grobner bases to solve
+reduction problems for Feynman integrals ,JHEP 01(2006) 001,
+[hep-lat/0509187 ].
+[6] R. N. Lee, LiteRed 1.4: a powerful tool for reduction of multiloop
+integrals ,J. Phys. Conf. Ser. 523(2014) 012059, [ 1310.1145 ].
+[7] K. J. Larsen and Y. Zhang, Integration-by-parts reductions from
+unitarity cuts and algebraic geometry ,Phys. Rev. D93 (2016) 041701,
+[1511.01071 ].
+[8] D. A. Kosower, Direct Solution of Integration-by-Parts Systems ,
+Phys. Rev. D98 (2018) 025008, [ 1804.00131 ].
+[9] C. Anastasiou and A. Lazopoulos, Automatic integral reduction for
+higher order perturbative calculations ,JHEP 07(2004) 046,
+[hep-ph/0404258 ].
+[10] A. von Manteuﬀel and C. Studerus, Reduze 2 - Distributed Feynman
+Integral Reduction ,1201.4330 .
+[11] A. V. Smirnov, FIRE5: a C++ implementation of Feynman Integral
+REduction ,Comput. Phys. Commun. 189(2015) 182–191,
+[1408.2372 ].
+[12] J. Pakkanen, The Meson Build System ,https://mesonbuild.com .
+20

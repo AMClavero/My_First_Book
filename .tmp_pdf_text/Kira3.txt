@@ -1,0 +1,768 @@
+arXiv:2505.20197v1  [hep-ph]  26 May 2025ZU-TH 39/25
+HU-EP-25/17-RTG
+Kira 3: integral reduction with efficient
+seeding and optimized equation selection
+Fabian Lange∗,a,b, Johann Usovitsch†,c, and Zihao Wu‡,d
+aPhysik-Institut, Universität Zürich, Winterthurerstrasse 190, 8057 Zürich, Switzerland
+bPSI Center for Neutron and Muon Sciences, Forschungsstrasse 111, 5232 Villigen PSI,
+Switzerland
+cInstitut für Physik und IRIS Adlershof, Humboldt–Universität zu Berlin, 10099 Berlin,
+Germany
+dSchool of Fundamental Physics and Mathematical Sciences, Hangzhou Institute for
+Advanced Study, UCAS, 310024 Hangzhou, China
+We present version 3ofKira, a Feynman integral reduction program for high-
+precision calculations in quantum field theory and gravitational-wave physics.
+Building on previous versions, Kira 3introduces optimized seeding and equa-
+tion selection algorithms, significantlyimproving performance for multi-loop and
+multi-scaleproblems. Newfeaturesincludeconvenientnumericalsampling, sym-
+bolic integration-by-parts reductions, and support for user-defined additional
+relations. We demonstrate its capabilities through benchmarks on two- and
+three-loop topologies, showcasing up to two orders of magnitude improvement
+overKira 2.3 .Kira 3is publicly available and poised to support ambitious
+projects in particle physics and beyond.
+Keywords: Feynman diagrams, multi-loop Feynman integrals, integral reduction, computer
+algebra
+∗E-mail: fabian.lange@physik.uzh.ch
+†E-mail: johann.usovitsch@hu-berlin.de
+‡E-mail: wuzihao@mail.ustc.edu.cn
+NEW VERSION PROGRAM SUMMARY
+Program title: Kira
+Developer’s repository link: https://gitlab.com/kira-pyred/kira
+Licensing provisions: GNU General Public License 3 (GPL)
+Programming language: C++
+Journal Reference of previous version:
+P. Maierhöfer, J. Usovitsch and P. Uwer, Kira—A Feynman integral reduction program ,
+Comput. Phys. Commun. 230(2018) 99 [ 1705.05610 ].
+J. Klappert, F. Lange, P. Maierhöfer and J. Usovitsch, Integral reduction with Kira 2.0 and
+finite field methods ,Comput. Phys. Commun. 266(2021) 108024 [ 2008.06494 ].
+Does the new version supersede the previous version?: Yes.
+Reasons for the new version: Improved algorithms with significant performance gains for
+all problems and new features.
+Summary of revisions: The primary new feature is an improved seeding and selection of
+equations. Further improvements include the expanded support for numerical integration-
+by-partsapplications,symbolicintegration-by-partsreductions,andsupportforuser-defined
+additional relations.
+Nature of problem: The reduction of Feynman integrals to a smaller set of master integrals is
+a central building block for high-precision calculations of observables in theoretical particle
+and gravitational-wave physics. Furthermore, the reduction is a key ingredient in many
+methods to calculate the master integrals themselves.
+Solution method: Kiragenerates a system of equations using integration-by-parts [1,2],
+Lorentz-invariance [3], and symmetry relations. It eliminates linearly dependent equations
+and identifies master integrals by solving the system over a finite field [4] and then solves
+the system of equation with Laporta’s algorithm [5]. Two solution methods are available:
+since version 1.0,Kiraalgebraically solves the system using Fermat[6]; since version 2.0, it
+numerically solves the system multiple times over finite fields, reconstructing master integral
+coefficients with FireFly [7,8]. Both approaches extend to any homogeneous linear system.
+New in this version, an optimized algorithm for seeding and selecting integration-by-parts
+identities demonstrates that a small subset of prior equations suffices for a full reduction.
+References:
+[1] F. V. Tkachov, A theorem on analytical calculability of 4-loop renormalization group
+functions ,Phys. Lett. B 100(1981) 65.
+[2] K. G. Chetyrkin and F. V. Tkachov, Integration by parts: The algorithm to calculate
+β-functions in 4 loops ,Nucl. Phys. B192(1981) 159.
+[3] T. Gehrmann and E. Remiddi, Differential equations for two-loop four-point functions ,
+Nucl. Phys. B580(2000) 485 [ hep-ph/9912329 ].
+2
+[4] P. Kant, Finding linear dependencies in integration-by-parts equations: A Monte Carlo
+approach ,Comput. Phys. Commun. 185(2014) 1473 [ 1309.7287 ].
+[5] S. Laporta, High precision calculation of multiloop Feynman integrals by difference equa-
+tions,Int. J. Mod. Phys. A 15(2000) 5087 [ hep-ph/0102033 ].
+[6] R. H. Lewis, Computer Algebra System Fermat , https://home.bway.net/lewis.
+[7] J. Klappert and F. Lange, Reconstructing rational functions with FireFly ,Comput. Phys.
+Commun. 247(2020) 106951 [ 1904.00009 ].
+[8] J. Klappert, S. Y. Klein and F. Lange, Interpolation of dense and sparse rational func-
+tions and other improvements in FireFly ,Comput. Phys. Commun. 264(2021) 107968
+2004.01463 .
+3
+Contents
+1 Introduction 1
+2 Preliminaries 1
+3 New features 4
+3.1 Improved seeding . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 4
+3.1.1 Changed behavior for sectors with symmetries or preferred master
+integrals . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 4
+3.1.2 Truncating the seeds . . . . . . . . . . . . . . . . . . . . . . . . . . . . 5
+3.2 Improved selection algorithm . . . . . . . . . . . . . . . . . . . . . . . . . . . 7
+3.3 Extra relations . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 9
+3.4 Numerical sampling . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 9
+3.5 Symbolic integration-by-parts reductions . . . . . . . . . . . . . . . . . . . . . 11
+3.6 Check master integral basis . . . . . . . . . . . . . . . . . . . . . . . . . . . . 13
+4 Further changes 13
+4.1 Internal reordering of propagators . . . . . . . . . . . . . . . . . . . . . . . . 13
+4.2 Support for 128-bit weights . . . . . . . . . . . . . . . . . . . . . . . . . . . . 15
+4.3 Command Line option ––set_value . . . . . . . . . . . . . . . . . . . . . . . 15
+5 Benchmarks 15
+5.1 Double-box topologies . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 17
+5.2 Tennis-court topology . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 17
+5.3 Double-pentagon and pentagon-hexagon topologies . . . . . . . . . . . . . . . 19
+6 Conclusions 21
+i
+1 Introduction
+Feynman integrals are central objects for high-precision predictions for both particle physics
+experiments based on perturbative quantum field theory as well as for scattering events
+of cosmological objects like black holes which provide input for gravitational-wave studies.
+CalculationsfirstgenerateamplitudesoranglesconsistingoftensorFeynmanintegralswhich
+are then reduced to scalar Feynman integrals with the help of tensor reduction techniques.
+State-of-the-art calculations typically result in at least tens of thousands if not millions
+of scalar integrals whose direct calculations is infeasible in most cases. Integration-by-
+parts (IBP) identities [1,2] and the Laporta algorithm [3] allow us to reduce this number
+to a significantly smaller set of master integrals. This is implemented in tools like AIR[4],
+FIRE[5–9],Reduze[10,11],Kira[12,13], FiniteFlow [14] with LiteRed [15,16], and
+Blade[17].
+The ever increasing need of higher precision leads to an increasing complexity both in
+terms of loop orders and external legs and, thus, requires constant development of new
+and improved integration-by-parts (IBP) reduction strategies. The field of Feynman in-
+tegral reductions is constantly evolving and new techniques are explored and applied to
+integral reduction problems, e.g. syzygy equations/algebraic geometry [18–28], intersec-
+tion numbers [29–41], finite field and interpolation techniques [8,14,42–55], special integral
+representations [17,56–58], and other methods [59–61] as well as machine learning tech-
+niques [62–64].
+In this article we describe the new version 3ofKirawhich is widely used in the community
+and backend in several public tools, see e.g. Refs. [28,49,65–68]. After a brief recapitulation
+of IBP reductions and an overview of the strategy of Kirain Section 2, we discuss the new
+features in Section 3. The main features are improved seeding and selection strategies which
+reduce the reduction complexity significantly, especially if high tensor ranks are involved.
+Furthermore, we discuss other new features like the possibility to add additional relations,
+sample the system over user-provided finite field points, perform symbolic reductions, and
+check the master integral basis. In Section 4 we discuss smaller changes with respect to the
+default behavior before quantifying the improvements with some benchmarks in Section 5
+and concluding in Section 6.
+2 Preliminaries
+The central object of this paper is the Feynman integral
+Iν1,...,νn({si,mi},d) =/integraldisplay
+L/productdisplay
+j=1ddkj
+N/productdisplay
+j=11
+Dνj
+j, (1)
+where we follow the standard notations used in Ref. [12]. We use the convention Dj=
+q2
+j−m2
+j+ iδ, whereqjdenotes the momentum of the j-th propagator. The momentum qj
+1
+can be written as a linear combination of Lloop momenta kiandElinearly independent
+external momenta pjsuch that
+qj=L/summationdisplay
+n=1ajnkn+E/summationdisplay
+n=1bjnpn (2)
+for some integers ajnandbjn. The term iδis the Feynman prescription. Here, {si,mi}
+schematically denotes the set of external scales and internal masses on which the integral
+family depends. We work in dimensional regularization d=dint−2ε, wheredintis a positive
+(even) integer. In the remainder of this paper, we will typically leave the dependence on
+the external scales, masses, and the dimension implicit. The propagator exponents νiare
+assumed to be integers. The set of inverse propagators must be complete and independent
+in the sense that every scalar product of momenta can be uniquely expressed as a linear
+combination of qj, squared masses m2
+j, and external kinematical invariants. The number of
+propagators is thus N=L
+2(L+ 2E+ 1)including auxiliary propagators that only appear
+withνj≤0.
+The Feynman integrals of Eq. (1) are in general not independent. In Refs. [1,2] it was found
+that they are related by so-called integration-by-parts (IBP) identities
+/integraldisplay/parenleftiggL/productdisplay
+i=1ddki/parenrightigg
+∂
+∂kµ
+iPµ
+j
+Dν1
+1Dν2
+2···DνN
+N= 0, (3)
+wherePµ
+jis either a loop momentum, an external momentum, or a linear combination
+thereof. In addition to these IBP identities, there also exist so-called Lorentz-invariance
+identities [69]
+E/summationdisplay
+i=1/parenleftigg
+pν
+i∂
+∂piµ−pµ
+i∂
+∂piν/parenrightigg
+Iν1,...,νn= 0. (4)
+They do not provide additional information, but it was found that they often facilitate the
+reduction process. Finally, there are symmetry relations between Feynman integrals which
+are most often searched for by comparing graph polynomials with Pak’s algorithm [70]. All
+these relations provide linear equations of the form
+0 =/summationdisplay
+ici({si,mi},d)Iν1,...,νn (5)
+between different Feynman integrals, where the coefficients ci({si,mi},d)are polynomials
+in the kinematic invariants sj, the propagator masses mk, andd. The relations can be
+solved to express the Feynman integrals in terms of a basis of master integrals. It was even
+shown that the number of master integrals for the standard Feynman integrals of Eq. (1) is
+finite [71].
+Nowadays, the most prominent solution strategy is the Laporta algorithm [3]: The linear
+relations of Eq. (5) are generated for different values of the propagator powers νjresulting
+in a system of equations between specific Feynman integrals. Each choice of {νj}is called
+aseedand this generation process is also known as seeding. The system can then be solved
+with Gauss-type elimination algorithms.
+2
+This requires an ordering of the integrals. In Kirawe first assign the integrals to so-called
+topologies based on their respective sets of propagators, i.e. their momenta and masses. We
+assign a unique integer number to each topology. Secondly, we assign each integral to a
+sector
+S=N/summationdisplay
+j=12j−1θ(νj−1
+2), (6)
+whereθ(x)is the Heaviside step function. A sector S(with propagators powers νj) is called
+subsector of another sector S′(with propagators powers ν′
+j) ifS < S′andθ(νj−1
+2)≤
+θ(ν′
+j−1
+2)for allj= 1,...,N. We denote as top-level sectors those sectors which are
+not subsectors of other sectors that contain Feynman integrals occurring in the reduction
+problem at hand. For the discussions in the following sections it is beneficial to use the
+big-endian binary notation instead of the sector number defined by Eq. (6), i.e. the sector
+S= 5is represented by b 1010where each number represents one bit of the number 5in
+reverse order. In this notation it is immediately visible that b 1010is a subsector of b 1110.
+Furthermore, it is useful to define the number of propagators with positive powers,
+t=N/summationdisplay
+j=1θ(νj−1
+2), (7)
+and
+r=N/summationdisplay
+j=1νjθ(νj−1
+2), s =−N/summationdisplay
+j=1νjθ(1
+2−νj), d =N/summationdisplay
+j=1(νj−1)θ(νj−1
+2)(8)
+denoting the sum of all positive powers, the negative sum of all negative powers, and the
+sum of positive powers larger than 1 (referred to as dots), respectively.
+On the one hand, these concepts allow us to order the integrals in Kira. On the other hand,
+they are used to limit the seeds {νj}for which equations are generated. We generate the
+equations only for those sets {νj}for whichr≤rmax,s≤smax, andd≤dmax, wherermax,
+smax, anddmaxare input provided by the user.
+The workflow in Kirais split into two components: first generating the system of equations
+and then solving it. We offer two different strategies for the latter. First, the system
+can be solved analytically using the computer algebra system Fermat[72] for the rational
+function arithmetic. Secondly, the system can be solved using modular arithmetic over finite
+fields [42–45] with our internal solver pyRed. The variables, i.e. kinematic invariants and
+masses, arereplacedbyrandomintegernumbersandallarithmeticoperationsareperformed
+over prime fields. Choosing the largest 63-bit primes allows us to perform all operations on
+native data types and to avoid large intermediate expressions. The final result can then be
+interpolated and reconstructed by probingthe system sufficiently many times for different
+random choices of the variables. We employ the library FireFly for this task [46,47].
+The main improvements of Kira 3concern the generation of the system of equations and it
+is thus beneficial for the understanding of the reader to summarize the old algorithm from
+version2.3in more detail:
+3
+1. Identify trivial sectors and discard all integrals in these sectors.
+2. Identify symmetries between sectors including those of other integral families and
+collect them in the set {S′}.
+3. Generate IBP equations for all sectors not in {S′}and generate only symmetry equa-
+tions for all sectors in {S′}. Start from the simplest one and generate all equations
+within the specifications provided by the user:
+i) Generate one equation. Check if it is linearly independent by inserting all previ-
+ously generated equations numerically [43].
+ii) Keep, if it is linearly independent, otherwise drop it.
+4. After all equations were generated, solve the system for the target integrals specified
+by the user with modular arithmetic and drop all equations which do not contribute
+to their solutions.
+At the end of this procedure Kirahas generated a system of linearly independent equations
+specifically trimmed to suffice to reduce the target integrals to master integrals.
+3 New features
+3.1 Improved seeding
+Thechoiceofwhichequationsshouldbegeneratedforthereductionhassevereimpactonthe
+performance of the reduction. Previous versions of Kiraseed conservatively and generate all
+equations within the bounds specified by the user to reduce to the minimal basis of master
+integrals. Irrelevant equations are filtered out through a selection procedure. However, for
+integrals with many loops or high values of r,s, anddthe combinatorics of the seeds easily
+gets out of hand and already makes the generation of the system of equations unfeasible,
+running both into runtime and memory limits.
+We show that it is possible to find a subset of relevant equations which improves the gener-
+ation of equations lifting the limits for many applications, as demonstrated in Refs. [73,74].
+We revise the seeding process in Kiraand identify three areas for improvement: sectors
+related by symmetries, sectors containing preferred master integrals, and subsectors. We
+discuss the first two points in Section 3.1.1 and the latter in Section 3.1.2.
+3.1.1 Changed behavior for sectors with symmetries or preferred master integrals
+In previous versions of Kira, sectors which are related by symmetries to other sectors are
+seeded with the same values for rmaxandsmax, ignoring any set dmax. Similarly, sectors
+which contain one of the preferred master integrals are seeded with the maximum values
+ofrmaxandsmaxfor all sectors, again ignoring dmax. Those choices turn out to be too
+4
+conservative and negatively impact the performance of IBP reductions. With Kira 3sub-
+sectors inherit the values for rmax,smax, and alsodmaxfrom higher sectors, independently
+of symmetries and preferred master integrals.
+Furthermore, in previous versions Kiradid not generate IBP equations for sectors which can
+bemappedawaybysymmetriesandinsteadreliedonsymmetryrelationsalone. Whilethisis
+agoodstrategytogeneratefewerequations, symmetryequationsquicklybecomelongerwith
+more complicated coefficients when they are generated with numerators. Their complexity
+easily overtakes those of IBP equations even for moderate values of sand makes the solution
+significantly more expensive. Hence, with Kira 3we also generate IBP equations for sectors
+which are mapped away by symmetries. This increases the reduction performance, while the
+growth of generated equations is easily compensated by the new truncation option discussed
+in the next subsubsection.
+3.1.2 Truncating the seeds
+By default, the values for rmaxandsmaxfor one sector are inherited by all subsectors. For
+example, if we are interested in the integral T(1,1,1,1,1,1,1,0,−4), the typical choice is to
+seed the sector b 111111100 withrmax= 7andsmax= 4. This then propagates to the lower
+sectors and sector b 111111000 is automatically seeded with rmax= 7, corresponding to
+dmax= 1, andsmax= 4and sector b 111000000 withrmax= 7, corresponding to dmax= 4,
+andsmax= 4, respectively. The increase in dmaxcan already be restricted by manually
+settingdmax(with the exceptions discussed in Section 3.1.1), but we previously argued
+against this to prevent finding too many master integrals. With the new release of Kira 3
+we revise this recommendation and encourage setting dmax.
+However, keeping smaxconstant when descending to the subsectors is even more problematic
+because the combinatorics of distributing irreducible scalar products in lower sectors grows
+factorially. As it turns out, most of these seeds are actually not required to reduce integrals
+with positive sin higher sectors and one can decrease smaxin lower sectors. In Kira 3we
+introduce a new feature to restrict sfollowing the function
+s≤max(1, t−l+ 1, smax,sector) (9)
+wheretwas defined in Eq. (7), lcan be chosen by the user, and smax,sectoris the value that
+was explicitly set by the user for this sector with the option reduce. If no explicit value
+is provided with reduce,smax,sector = 0, i.e. it is not inherited from higher sectors. The
+usefulness of this feature was first described and proven in Ref. [73]. Similar observations
+were also made by the developers of Blade[17] andFIRE[75].
+This feature can be enabled with the new job file option
+truncate_sp:
+- {topologies: [<topologies>], l: <n>}
+with the two arguments
+5
+•topologies (optional): a list of topologies to which truncate_sp should be applied.
+If no topology is provided, Kiraappliestruncate_sp to all topologies.
+•l(mandatory): This option takes the integer argument <n>(negative numbers are
+allowed) and instructs Kirato choose seeds following Eq. (9) with l=<n>.
+A good choice of <n>can result in a speedup of orders of magnitude. To choose the optimal
+parameters we recommend the following strategy:
+1. The highest possible value for <n>is computed by taking the difference between the
+tvalue of the top-level sector and the highest number sof an integral which one
+wants to reduce. This choice is too optimistic in almost all cases and one should run
+Kirato check if all integrals reduce to the expected master integrals. The new option
+check_masters describedinSection3.6ishelpfulforthispurpose. Iftoomanymaster
+integrals are reported, we recommend to tune the options provided to Kirastarting
+with those sectors with the highest value of tthat report too many master integrals.
+2. Tune all sectors at level t:
+i) If many or even all sectors with the same value of thave too many master
+integrals whose values are cut off by Eq. (9), decrease <n>to a value that seeds
+those additional master integrals.
+ii) IfonlyafewsectorshavetoomanymasterintegralscutoffbyEq.(9)or s>s max,
+increasesmaxfor the sector.
+iii) If there are too many master integrals with d > d maxin a sector, increase dmax
+for this sector.
+3. RunKiraagain to check if there are additional master integrals on level t. If yes, tune
+those sectors further by repeating steps 2 and 3. If not, reduce tby one and repeat
+steps 2 and 3 on this level.
+Using the option select_mandatory_recursively is not recommended if truncate_sp is
+enabled because the aforementioned option selects all integrals to reduce with a constant
+value ofsmax. This results in Kirareporting many unreduced integrals because many
+required seeds are removed by truncate_sp .
+Summarizing this section, our recommendation for the job file with Kira 3reads
+jobs:
+- reduce_sectors:
+reduce:
+- {topologies: [topo7], sectors: [b111111100], r: 7, s: 5, d: 0}
+- {topologies: [topo7], sectors: [b011100100], r: 5, s: 3, d: 1}
+truncate_sp:
+- {topologies: [topo7], l: 3}
+select_integrals:
+select_mandatory_list:
+- [seeds7]
+6
+for the example topology topo7provided with the source code. The top-level sector
+b111111100 (127) is seeded with rmax= 7,smax= 5, anddmax= 0, providing sufficient
+seeds to reduce all integrals in this sector. Furthermore, truncate_sp cuts away seeds in
+subsectors. However, sector b011100100 (78) had to be tuned by increasing dmaxto1.
+3.2 Improved selection algorithm
+OnceKiradeterminesthelinearlyindependentsystemofequations, itwillselecttherelevant
+equationstoreducespecificintegralsasdefinedforexamplewiththeoption select_integals .
+The algorithm to select relevant equations in previous Kiraversions is not optimal. One
+weaknesscaneasilybeillustratedwhenreducingallintegralsinthetop-levelsector b111111100
+(127) of the topology topo7depicted in Fig. 1 with exactly s= 5. WithKira 2.3 , we first
+m2
+1
+m2
+2p1
+p2p3
+p4
+Figure 1: The planar double box topo7contributing, e.g., to single-top production.
+seed withsmax= 5and, secondly, with smax= 6, and in both cases select equations to re-
+duce the same set of integrals. As can be seen in Table 1, the number of selected equations
+and with it the number of terms as well as the time to solve the system increases. This can
+Table 1: Comparison of the generated and selected systems for topo7when seeded with
+different values of smax.
+2.3,smax= 52.3,smax= 63.0,smax= 53.0,smax= 6
+# of generated eqs. 3317357 6009193 4053617 7511785
+# of selected eqs. 62514 85119 30984 30984
+# of terms 461336 659803 245975 245975
+be explained by the fact that Kiragenerates and selects equations with the sector-by-sector
+approach as discussed in Section 2. It prefers equations generated with higher values for
+r,s, anddin lower sectors, which are usually more complicated than equations generated
+with low values of r,s, anddin higher sectors.
+Secondly, we identified another problem: Kiraselects equations which do not contribute to
+the final result because they cancel in intermediate steps. This can be illustrated with the
+toy system
+(i) 0 =x[6] +b1x[2],
+(ii) 0 =x[6] +c1x[1],
+(iii) 0 =x[5] +a1x[2] +a2x[4] +a3x[3],
+(iv) 0 =x[5] +a1x[2],(10)
+7
+wherex[i]represents a Feynman integral and the Roman number in front denotes the
+equation number. We now solve this system using Gaussian elimination.
+InKirawe solve equations one at a time, starting with equation (iv)in Eq. (10) and work
+in a bottom-up approach. Whenever we add a new equation, Kiraimmediately inserts
+already known solutions into the new equation. If the equation equates to zero, it is treated
+as redundant and is discarded. Otherwise its terms are sorted with respect to some Laporta
+ordering and the new equation is added to the solved equations. This is repeated until all
+equations are processed. This step is called forward elimination in Kiraand results in a
+system that is in upper-triangular form. After the forward elimination Eq. (10) reads
+(i) 0 =b1x[2]−c1x[1]{ii},
+(ii) 0 =x[6] +c1x[1]{},
+(iii) 0 =a2x[4] +a3x[3]{iv},
+(iv) 0 =x[5] +a1x[2]{}.(11)
+Kiratraces which equationswereused to eliminateintegrals from the newlyadded equation,
+in this example denoted by the Roman numbers in the curly brackets: Equation (ii)was
+used to eliminate the integral x[6]in equation (i)and equation (iv)was used to eliminate
+the integral x[5]in equation (iii).
+In the second step, the backward substitution iterates the system of equations bottom-up
+andinsertsallavailablesolutions. Againwerecordeachequationusedtoeliminateintegrals.
+After the back substitution we obtain
+(i) 0 =b1x[2]−c1x[1]{ii},
+(ii) 0 =x[6] +c1x[1]{},
+(iii) 0 =a2x[4] +a3x[3]{iv},
+(iv) 0 =x[5] +a1c1/b1x[1]{i,ii}.(12)
+Here equation (i)is used to eliminate the integral x[2]in equation (iv).
+In previous versions the information in the curly brackets from Eq. (12) is used to select
+relevant equations for the reduction process. For the reduction of the integral x[4], the
+previous versions of Kiraselected equation (iii)because it provides the solution for x[4],
+then equation (iv)which was inserted into equation (iii), and finally equations (i)and(ii)
+which were inserted into equation (iv). However, the latter two do not provide any relevant
+information: it is easy to spot in Eq. (10) that equation (iii)contains equation (iv)as a
+subequation. This subequation thus vanishes after inserting equation (iv)only and the
+information of equations (i)and(ii)is not needed. We call this phenomenon hidden zero
+which in general can take more complicated forms.
+To address both the deficits of the sector-by-sector approach and the hidden zeros, Kira 3
+selects the relevant equations after the forward elimination only. For the example above we
+can clearly see that this information in Eq. (11) is sufficient to reduce the integral x[4]to
+master integrals and it gives the relevant equations only. For more generic examples the
+algorithm requires one additional step: Kirareduces the system numerically over a finite
+field once and checks if the selected equations are sufficient to reduce all integrals to the
+8
+minimal basis of master integrals. All unreduced integrals are added to the list and the
+reduction is repeated until all requested integrals are reduced to the minimal basis. This
+algorithm is generic and applies to user-defined systems as well.
+However, it cannot give the minimal number of equations for general problems as more
+stealthy zeros in the forward elimination remain undetected. One could heuristically reduce
+the number of equations by randomly reordering the equations and repeating the algorithm
+discussed above, throwing out all irrelevant equations at the end of every iteration. Repeat-
+ing this process, we end up with less and less equations until reaching a local minimum.
+However, a randomly reordered system of equations typically gets dense after a few Gaus-
+sian elimination steps, making the solution computationally expensive. One could reorder
+the system of equations in bunches, e.g. in batches of 20 equations, but in our experiments
+this yield at most 20% less equations. This is a very low improvement from our perspective
+and does not justify the implementation of this algorithm yet. There is another algorithm,
+privately called the Oerlikon algorithm , designed to select necessary IBP equations, see
+Refs. [24,27], which we plan to investigate with Kirain the future.
+The impact of the new selection algorithm is illustrated in Table 1. Since the new trun-
+cation discussed in Section 3.1.2 option is not enabled, Kira 3generates more equations
+thanKira 2.3 as discussed in Section 3.1.1. However, even though 22% more equations are
+generated for smax= 5, the new selection algorithm actually selects 50% less equations, in-
+dicating that many hidden zeros and irrelevant equations are dropped. Moreover, increasing
+smaxto6does not change the selected equations anymore as in previous versions.
+3.3 Extra relations
+There can be additional relations between integrals that are not discovered by Kira, usually
+through some non-trivial symmetries, see e.g. Refs. [76–78], or four-dimensional kinematic
+constraints, see e.g. Ref. [79]. Therefore, it is desirable to add those relations to the system
+generated by Kira. In previous version additional relations could only be added in the
+user-defined system mode. With Kira 3it is now possible to add them during the normal
+reduction setup with the option extra_relations: <file> in the job file. It takes exactly
+only one file as argument in which the relations should be provided in the format of user-
+defined systems as described in Ref. [13]. The additional equations are inserted after the
+IBP relations for a specific sector were generated. Additional relations belonging to sectors
+beyond the seeded sectors are inserted at the end of the generation process.
+3.4 Numerical sampling
+For complicated reductions it might be useful to sample the reduction numerically on chosen
+phase space points, either before attempting to obtain full analytic expressions or bypassing
+them altogether, see e.g. Ref. [80]. In the context of Kirathis feature has been explored in
+Ref. [79].
+9
+There are two aspects with respect to this feature: First, we implemented an interface for
+the user to provide both the prime for the finite field and the sample points with the option
+numerical_points: <file> where the file format reads
+prime 9223372036854771977
+d s t m12 m22
+11111 -1 -38 -1039/6 -2712776
+11112 -1 -38 -1039/6 -2712776
+prime 9223372036854771689
+d s t m12 m22
+11111 -1 -38 -1039/6 -2712776
+11112 -1 -38 -1039/6 -2712776
+The first line specifies the user-defined prime number for a finite field. The largest prime
+number currently permitted is 9223372036854775783 , i.e. the largest 63-bit prime. The
+second line lists all symbols that the user intends to assign numerical values to. It should
+contain all symbols appearing in the system, i.e. all kinematic invariants, the dimension d,
+and potentially further symbols in user-defined systems of equations. In the following lines
+the numerical values corresponding to those symbols are provided. An empty line separates
+the collection of points from another collection of points in a different prime field.
+The second, less obvious aspect concerns the generation of the system of equations by
+Kira. By default Kirachooses pseudo-random numbers for all symbols in the system
+during the generation step to check the equations for linear dependence. However, the user
+might restrict the sample points to a slice in phase space in which not all of the symbols
+are independent. In this case, further cancellations can occur and a system of linearly-
+independent equations generated on a general pseudo-random phase space point might no
+longer contain sufficient information to reduce all integrals. Therefore, when instructed with
+numerical_points in the job file, Kiragenerates the system with the first provided phase
+space point and prime and writes it to disk as usual. The same result can be obtained
+with the command-line options ––set_value and––prime_user , see also Section 4.3. By
+default,Kirawrites the system to disk with algebraic coefficients, but can be instructed to
+replace all symbols by the given values with the job file option symbols2num: true .
+Theresultsofthenumericalreductionsarewrittentothefiles results/<topology>/<input
+file name>_<prime>_<j>.m . Since we want to avoid to produce too large files, only 1000
+entries are written into each file. If this limit is reached, Kirawrites to the next file with
+jincreased by one. An example output for a reduction with the example integral family
+topo7looks like
+{9223372036854771977,
+{{11111, 9223372036854771976, 9223372036854771939, 7686143364045643141,
+9223372036852059201},
+{
+{topo7[1,1,1,1,1,1,1,-5,0],
+10
+{topo7[1,1,1,1,1,1,1,0,-1], 2951302433002828169},
+{topo7[1,1,1,1,1,1,1,-1,0], 819004719938417371},
+{topo7[1,1,1,1,1,1,1,0,0], 5495110817388584284},
+...
+},
+...
+}
+},
+{{11112, 9223372036854771976, 9223372036854771939, 7686143364045643141,
+9223372036852059201},
+{
+{...}
+}
+}
+}
+where the indentation is for better illustration. Each file is structured as a nested list in
+Mathematica readable format. The first entry is a prime number used in the computations,
+followed by sublists, each containing IBP results for a specific numerical point. Each sublist
+starts with the numerical point as an identifier (note that the user input has been converted
+into a finite field element over the user provided prime), followed by the numerical reduction
+results. Each reduction result is a sublist beginning with the integral to be reduced, followed
+by pairs of master integrals and their corresponding reduction coefficients.
+3.5 Symbolic integration-by-parts reductions
+Obtaining general recurrence relations for arbitrary propagator powers can be seen as the
+ultimate goal for IBP reductions since they should facilitate an efficient reduction for all
+integrals of a family. LiteRed [15,16] is the only public tool that offers an algorithm to
+search for such relations, but it is not guaranteed to succeed. Recently, a different strategy
+has been explored in Ref. [60].
+InKira 3it is now possible to treat propagator powers symbolically and use the Laporta
+strategy to derive symbolic recursion relations. Every power is treated as an additional
+symbolwhichmakesitcomputationallyexpensivetoderivefullyalgebraicrecursionrelations
+in all indices. However, constructing recursion relations for one or very few powers works
+reasonably well in many problems. This feature is activated with the option symbolic_ibp:
+[<n1>, <n2>, ...] inintegralfamilies.yaml .<n1>,<n2>, ...may take an integer
+number between 1and the total number of propagators provided with the integral family
+definition. The symbolic power is then associated with the n1,n2, ...propagator from top
+to bottom as listed in integralfamilies.yaml .
+In the following we illustrate our best strategy for a symbolic IBP reduction as applied in
+Ref. [81] with an example available in the directory examples/symbolic_IBP provided with
+thesourcecode. Itisadvisedtotakeasatop-levelsectorallpropagatorswhichhavepositive
+11
+propagator powers, but to omit the propagators associated with the symbolic powers. The
+relevant part of integralfamilies.yaml may read
+top_level_sectors: [b011111100] # b011111100 is same as sector 126
+symbolic_ibp: [1]
+where we treat the first propagator power as a symbolic power. The example job file
+jobs_lowering.yaml is used to generate lowering relations for the symbolic power:
+jobs:
+- reduce_sectors:
+reduce:
+- {topologies: [topo7], sectors: [b011111100], r: 7, s: 2, d: 1}
+truncate_sp:
+- {topologies: [topo7], l: 4}
+select_integrals:
+select_mandatory_list:
+- [toReduce_lowering]
+preferred_masters: masters_lowering
+integral_ordering: 2
+run_initiate: true
+run_firefly: true
+- kira2math:
+target:
+- [toReduce_lowering]
+The filetoReduce_lowering contains one integral which will be reduced with Kira:
+#to reduce
+topo7[0,1,1,1,1,1,1,-2,0]
+The essential master integrals are listed in the file masters_lowering :
+topo7[-1,1,1,1,1,1,1,0,0]
+topo7[-1,1,1,1,1,1,1,0,-1]
+topo7[-1,1,1,1,1,1,1,-1,0]
+topo7[-2,1,1,1,1,1,1,0,0]
+Since the first index is symbolic, the corresponding entries are interpreted as lowering or
+raising operations. The first indices of the selected integrals serve as starting point and, if all
+of them are larger than the first indices of all preferred master integrals, Kirawill construct
+lowering relations, and raising operations if the first indices of the selected integrals are
+smaller. In the example above Kirawill try to construct a lowering relation shifting the
+first index down by −1and−2. If all of the selected integrals and all of the preferred master
+integrals have zero or negative symbolic indices, the corresponding sector is merged with a
+12
+subsector, generating less equations. In the example above sectors b011111100 (126) and
+b111111100 (127) are considered to be the same.
+In the resulting expressions, the symbols b0, ...,b(N-1)denote symbolic powers, where Nis
+the total number of propagators listed in integralfamilies.yaml . In the example above,
+we encounter the relation
+topo7[0,0,1,0,0,0,1,-1,0] ->
++ topo7[-1,0,1,0,0,0,1,0,0]*(((d+(-2))*(1))/((b0+(-1))*(1)))
+in the results directory, which can be translated into the recursion relation
+topo7 (b0,0,1,0,0,0,1,−1,0)→d−2
+b0−1topo7 (b0−1,0,1,0,0,0,1,0,0)(13)
+in the first b0index.
+3.6 Check master integral basis
+In many cases users determine and choose the basis of master integrals before performing a
+full-fledged reduction. Criteria might be a convenient basis choice for the reduction and/or
+for solving the master integrals. Since version 1.1,Kiraallows users to provide their
+basis choice with the job file option preferred_masters . Since version 2.0, the basis can
+also consist of linear combinations of master integrals as described in Ref. [13]. However,
+by default Kirasupplements the provided basis with additional master integrals in case
+it cannot reduce to the provided basis. With the new job file option check_masters:
+true,Kira 3compares the master integrals it found when generating the system with those
+provided by preferred_masters . It reports both additional master integrals as well as
+those provided master integrals it does not need for the reduction. In case it finds additional
+master integrals, it aborts the reduction and throws an error.
+This feature is especially useful if users already determined the basis and try to exploit the
+new seeding features discussed in Section 3.1 to generate an optimal system of equations.
+4 Further changes
+4.1 Internal reordering of propagators
+ItiswellknownthatthedefinitionofthepropagatorsinEq.(1)influencestheperformanceof
+the reduction. Not only different choices for the momenta have an impact, simply reordering
+them can make a difference, especially when selecting equations before the actual reduction
+as inKira. This can be demonstrated with the four-loop propagator topology depicted in
+Fig. 2. We reduce all integrals appearing in the quark self energy amplitude for the relation
+13
+Figure 2: Four-loop propagator topology with two masses.
+between the quark mass renormalization constants in the MS and the on-shell schemes [82].
+We compare the propagator order
+p2
+1−m2
+1,(p1−q)2,(p2+p3)2,(p1−p3+p4−q)2,(p3−p4)2,(p3+q)2,(p2+p4)2,
+p2
+2−m2
+2,(−p1+p2+p3−p4+q)2−m2
+2, p2
+3,p2
+4,(p1+p3)2,(p1+p4)2,(p1+p2)2,
+(14)
+which was automatically chosen when generating the amplitude in Ref. [82], denoted as bad
+choice, with propagator order 1,
+p2
+3, p2
+4, p2
+1−m2
+1, p2
+2−m2
+2,(p1−q)2,(p3−p4)2,(p1−p3+p4−q)2,
+(−p1+p2+p3−p4+q)2−m2
+2,(p2+p3)2,(p3+q)2,(p2+p4)2,(p1+p3)2,
+(p1+p4)2,(p1+p2)2,(15)
+which implements the guidelines outlined in Ref. [83]: order by the number of momenta and
+put massless propagators first. The underlined entries denote auxiliary propagators which
+only appear in the numerator and should be placed at the end.
+When comparing the systems of equations generated with Kira 3for the two permutation
+ordering choices in Table 2, we see that the system generated with order 1 selects 3% less
+equations, 6.5% less terms, and can be solved 29% faster for a phase space point over a
+finite field than the system generated with the bad choice .
+Table 2: Comparison of the generated and selected systems of equations for the two
+propagator orders defined in Eqs. (14) and (15) of the four-loop propagator topology
+depicted in Fig. 2.
+bad choice order 1
+# of equations 481855 467338
+# of terms 5902637 5537560
+TpyRed 8.0s 6.2s
+Since version Kira 2.3 offers the possibility to reorder the propagators internally indepen-
+dent of the order specified in the integral family definition, i.e. the propagator order in the
+input and output files differs from the order Kirauses internally to perform the reduction.
+14
+The ordering can either be chosen manually or be adjusted automatically according to four
+different ordering schemes. The one outlined above usually provides the best results. With
+Kira 3we will automatically turn on this ordering scheme by default. It can be overridden
+inconfig/integralfamilies.yaml by choosing a different ordering scheme with the op-
+tionpermutation_option: <N> , with<N>taking values from 1 to 4, or by manually fixing
+the order with the option permutation: [<n1>,...,<nN>] , where each <ni>denotes the
+number of the i’th propagator defined for the topology.
+4.2 Support for 128-bit weights
+Internally Kirarepresents all integrals by an integer weight. Up to Kira 2.2 they were
+limited to native 64-bit integers. However, those do not suffice to represent all integrals for
+some new, ambitious projects, see e.g. Ref. [81]. Hence, with Kira 2.3 we introduced 128-
+bit weights based on compiler extensions available in standard C++compilers like GCC[84]
+andclang[85]. The width of the weights can be set with
+meson setup -Dweight_width=<WIDTH> build
+when compiling Kira, where<WIDTH> can either be 64(default) or 128. If128is chosen,
+the executable is called kira128.
+Note that sectors are still represented by a 32-bit integer and, thus, topologies with more
+than 31 lines are not yet supported.
+4.3 Command Line option ––set_value
+When generating a system of equations with previous versions of Kira, a pseudo-random
+point was selected to determine the linearly independent system. The old implementa-
+tion of––set_value did not influence this point. In the same way as the job file option
+numerical_points introduced in Section 3.4, Kira 3now ensures that user-defined numer-
+ical points are respected during the generation and selection steps. In combination with the
+job option symbols2num: false the resulting independent system of equations is written
+to disk with symbolic coefficients.
+5 Benchmarks
+We provide multiple examples for two-loop and three-loop reductions in the example di-
+rectory shipped with the source code, in which the option truncate_sp as introduced in
+Section 3.1 and the new equation selection discussed in Section 3.2 are demonstrated,
+•double-box :topo7andtopo5, see Figs. 3(a) and 3(b),
+•tennis-court :TennisCourt , see Fig. 3(c),
+15
+•double-pentagon :doublePentagon ,doublePentagon-1-mass ,doublePentagon-2-mass ,
+doublePentagon-3-equal-mass , see Figs. 3(d) to 3(g),
+•pentagon-hexagon :hex, see Fig. 3(h).
+m2
+1
+m2
+2p1
+p2p3
+p4
+(a)topo7
+m2
+2p1
+p2p3
+p4m2
+1 m2
+1 m2
+1 (b)topo5
+p1
+p2p3
+p4 m2
+1
+(c)TennisCourt
+ (d)massless doublePentagon
+p1
+p2p3
+p4p5 m2
+1
+(e)one mass doublePentagon
+p1
+p2p3
+p4p5 m2
+1 m2
+2 (f)two mass doublePentagon
+p1
+p2p3
+p4p5 m2
+1
+m2
+1m2
+1
+(g)three equal mass doublePentagon
+ (h)hex
+Figure 3: Illustrated are different families which are used to study the algorithms as
+implemented in Kira 3. Integral family 3(a) and 3(b), are double-box topologies and
+are called topo7andtopo5, respectively. Integral family 3(c) is a three-loop tennis-
+court topology, called TennisCourt . The integral family depicted in 3(d)-3(g) belong to a
+double-pentagon topology and are called doublePentagon . Integral family 3(h) is a two
+loop pentagon-hexagon family with the name hex. The external momenta pi, are explicitly
+depicted to avoid ambiguity. Variables miare used to denote massive lines.
+To identify individual reduction problems we use the notation rmax.smax.dmaxin the follow-
+ing.rmaxstands for the maximum total number of positive indices, smaxfor the maximum
+total number of negative indices, and dmaxfor the maximum total number of dots, cf.
+Eq. (8). All reductions are performed for all integrals from top-level sectors only. We com-
+pare the new version Kira 3against the previous version Kira 2.3 . In all reductions Kira’s
+default integral ordering 1and the default permutation option 1are used, cf. Section 4.1.
+All benchmarks are performed on a machine with two AMD EPYC 7702 64-core processors
+with 1TiB of main memory.
+16
