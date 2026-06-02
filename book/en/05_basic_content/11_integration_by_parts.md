@@ -68,12 +68,14 @@ FIRE6 is a program to reduce Feynman integrals to master integrals; it implement
 
 Minimal example (start file sketch in Mathematica):
 
+```mathematica
 Get["FIRE6.m"]; 
 Internal = {k1, k2};
 External = {p1, p2, p3};
 Propagators = {-k1[2], -(k1 + p1 + p2)[2], -k2[2], ...(etc.)};
 Replacements = {p1[2] -> 0, p2[2] -> 0, p1 p2 -> s/2};
 PrepareIBP[]; Prepare[]; SaveStart["doublebox"]; Quit[];
+```
 
 Example C++ config file (`doublebox.conf`):
 
