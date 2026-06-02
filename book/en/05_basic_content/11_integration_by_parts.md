@@ -5,7 +5,7 @@ title: Integration by Parts (IBP) and Kira / Fire tools
 
 In the context of Feynman integrals, integration-by-parts (IBP) identities are linear relations obtained from integrals of total derivatives in loop-momentum space within dimensional regularisation. They relate integrals with different propagator powers and permit reduction of any integral in a family to a finite set of master integrals. Once master integrals are identified, one typically constructs differential equations for them and attempts to bring the system into an $\varepsilon$-form to obtain analytic solutions in terms of iterated integrals.
 
-Definition — Feynman integral:
+### Definition — Feynman integral:
 
 A Feynman integral associated to a graph $G$ with $l$ loops and $n$ propagators is commonly written as
 
@@ -15,7 +15,7 @@ $$
 
 where the $D_i$ denote inverse propagators and the integers $\nu_i$ their powers.
 
-Definition — IBP (integration by parts) for Feynman integrals:
+### Definition — IBP (integration by parts) for Feynman integrals:
 
 Within dimensional regularisation the integral of a total derivative vanishes (no boundary terms). For any loop momentum $k_i$ and any vector $q$ constructed from external and loop momenta,
 
@@ -25,7 +25,7 @@ $$
 
 Expanding this equation yields linear relations among Feynman integrals with shifted indices $\nu_j$; these are the IBP identities. By generating sufficiently many such identities and applying an ordering (Laporta algorithm), one reduces the family to a finite basis of master integrals.
 
-Key consequences and workflow:
+### Key consequences and workflow:
 
 - Reduction: IBP identities reduce generic integrals to master integrals using linear-algebraic elimination.
 - Master integrals: Only master integrals need explicit computation; they form a basis dependent on the chosen ordering.
@@ -51,7 +51,7 @@ Bubble (one-loop two-point) topology.
 Tadpole (one-loop one-point) topology.
 ```
 
-Remarks:
+### Remarks:
 
 - Different ordering choices (dot-basis, ISP-basis) lead to different practical master sets.
 - IBP reduction is algebraic over rational functions in kinematic variables and the dimension $D$; simplification of rational functions is typically the performance bottleneck.
