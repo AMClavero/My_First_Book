@@ -3,6 +3,7 @@ root: es/intro
 parts:
   - caption: Ejemplo
     chapters:
+    - file: es/05_contenidos_basicos/10_ecuaciones_segundo_grado
     - file: es/05_contenidos_basicos/11_integracion_por_partes
   - caption: Información
     chapters:
